@@ -1,0 +1,10 @@
+.DS_Store
+.idea
+.phpunit.result.cache
+.php_cs.cache
+coverage
+node_modules
+package-lock.json
+tests/__fixtures__/content/*.yaml
+tests/__fixtures__/users/*.yaml
+vendor
