@@ -4,8 +4,8 @@ namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
-use Statamic\Facades\Entry;
 use Statamic\Facades\Collection;
+use Statamic\Facades\Entry;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
 use Statamic\Support\Str;
@@ -36,7 +36,7 @@ class Factory
     /**
      * The amount of entries/terms to create
      *
-     * @var integer
+     * @var int
      */
     protected $amount;
 
@@ -69,7 +69,7 @@ class Factory
      *
      * @param string $contentType
      * @param string $handle
-     * @param integer $amount
+     * @param int $amount
      * @return void
      */
     public function run(string $contentType, string $handle, int $amount): void
@@ -172,7 +172,7 @@ class Factory
     {
         return $items->flatMap(function ($item) {
             return [
-                $item['handle'] => $item['field']['faker']
+                $item['handle'] => $item['field']['faker'],
             ];
         });
     }
@@ -225,9 +225,8 @@ class Factory
     protected function makeEntry(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-
             $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(rand(1,5))
+                'title' => $this->title(rand(1, 5)),
             ]);
 
             Entry::make()
@@ -237,7 +236,6 @@ class Factory
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
                 ->save();
-
         }
     }
 
@@ -250,9 +248,8 @@ class Factory
     protected function makeTerm(int $amount)
     {
         for ($i = 0; $i < $amount; $i++) {
-
             $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(rand(1,5))
+                'title' => $this->title(rand(1, 5)),
             ]);
 
             Term::make()
@@ -260,19 +257,19 @@ class Factory
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
                 ->save();
-
         }
     }
 
     /**
      * Create a title using faker.
      *
-     * @param integer $wordCount
+     * @param int $wordCount
      * @return string
      */
     protected function title(int $wordCount): string
     {
         $sentence = $this->faker->sentence($wordCount);
+
         return substr($sentence, 0, strlen($sentence) - 1);
     }
 }

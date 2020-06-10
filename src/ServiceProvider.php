@@ -8,18 +8,18 @@ use Statamic\Providers\AddonServiceProvider;
 class ServiceProvider extends AddonServiceProvider
 {
     public function boot()
-	{
-		parent::boot();
+    {
+        parent::boot();
 
-		if ($this->app->runningInConsole()) {
-			$this->commands([
-				RunFactory::class,
-			]);
-		}
-	}
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                RunFactory::class,
+            ]);
+        }
+    }
 
-	public function register()
-	{
-		parent::register();
-	}
+    public function register()
+    {
+        parent::register();
+    }
 }

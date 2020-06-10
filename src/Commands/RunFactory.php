@@ -60,8 +60,8 @@ class RunFactory extends Command
         if ($content === 'Collection') {
             $handle = $this->choice('Choose a collection', $this->collections());
             $amount = $this->askValid(
-                "How many ${handle} do you want to create?", 
-                'amount', 
+                "How many ${handle} do you want to create?",
+                'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
@@ -69,8 +69,8 @@ class RunFactory extends Command
         if ($content === 'Taxonomy') {
             $handle = $this->choice('Choose a taxonomy', $this->taxonomies());
             $amount = $this->askValid(
-                "How many ${handle} do you want to create?", 
-                'amount', 
+                "How many ${handle} do you want to create?",
+                'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
@@ -105,8 +105,12 @@ class RunFactory extends Command
     {
         $content = [];
 
-        if ($this->hasCollections()) $content[] = 'Collection';
-        if ($this->hasTaxonomies()) $content[] = 'Taxonomy';
+        if ($this->hasCollections()) {
+            $content[] = 'Collection';
+        }
+        if ($this->hasTaxonomies()) {
+            $content[] = 'Taxonomy';
+        }
 
         return $content;
     }
@@ -140,6 +144,7 @@ class RunFactory extends Command
     {
         if (empty($this->content())) {
             $this->error('You need at least one collection or taxonomy to use the factory.');
+
             return false;
         }
 
@@ -206,9 +211,9 @@ class RunFactory extends Command
     protected function validateInput(array $rules, string $fieldName, string $value)
     {
         $validator = Validator::make([
-            $fieldName => $value
+            $fieldName => $value,
         ], [
-            $fieldName => $rules
+            $fieldName => $rules,
         ]);
 
         return $validator->fails()

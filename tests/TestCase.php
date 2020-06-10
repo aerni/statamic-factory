@@ -42,7 +42,7 @@ abstract class TestCase extends OrchestraTestCase
             ],
         ];
 
-        Statamic::pushActionRoutes(function() {
+        Statamic::pushActionRoutes(function () {
             return require_once realpath(__DIR__.'/../routes/actions.php');
         });
     }
@@ -53,7 +53,7 @@ abstract class TestCase extends OrchestraTestCase
 
         $configs = [
             'assets', 'cp', 'forms', 'static_caching',
-            'sites', 'stache', 'system', 'users'
+            'sites', 'stache', 'system', 'users',
         ];
 
         foreach ($configs as $config) {
