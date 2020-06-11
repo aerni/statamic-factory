@@ -4,6 +4,7 @@ namespace Aerni\Factory\Commands;
 
 use Aerni\Factory\Factory;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Validator;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Collection;
@@ -54,42 +55,45 @@ class RunFactory extends Command
     public function handle(): void
     {
         if ($this->hasContent()) {
-            $content = $this->choice('Choose the type of content you want to create', $this->content());
+            $contentType = $this->choice('Choose the type of content you want to create', $this->contentTypes());
         }
 
-        if ($content === 'Collection') {
-            $handle = $this->choice('Choose a collection', $this->collections());
+        if ($contentType === 'Collection') {
+            $contentHandle = $this->choice('Choose a collection', $this->collections());
+            $blueprintHandle = $this->choice("Choose a blueprint to create ${contentHandle} from", $this->blueprintHandles($contentType, $contentHandle));
             $amount = $this->askValid(
-                "How many ${handle} do you want to create?",
+                "How many ${contentHandle} do you want to create?",
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
 
-        if ($content === 'Taxonomy') {
-            $handle = $this->choice('Choose a taxonomy', $this->taxonomies());
+        if ($contentType === 'Taxonomy') {
+            $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
+            $blueprintHandle = $this->choice("Choose a blueprint to create ${contentHandle} from", $this->blueprintHandles($contentType, $contentHandle));
             $amount = $this->askValid(
-                "How many ${handle} do you want to create?",
+                "How many ${contentHandle} do you want to create?",
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
 
-        $this->runFactory($content, $handle, $amount);
+        $this->runFactory($contentType, $contentHandle, $blueprintHandle, $amount);
     }
 
     /**
      * Run the factory.
      *
-     * @param string $content
-     * @param string $handle
+     * @param string $contentType
+     * @param string $contentHandle
+     * @param string $blueprintHandle
      * @param string $amount
      * @return void
      */
-    protected function runFactory(string $content, string $handle, string $amount): void
+    protected function runFactory(string $contentType, string $contentHandle, string $blueprintHandle, string $amount): void
     {
         try {
-            $this->factory->run($content, $handle, $amount);
+            $this->factory->run($contentType, $contentHandle, $blueprintHandle, $amount);
             $this->info('Your fake content was successfully created!');
         } catch (\Exception $exception) {
             $this->error($exception->getMessage());
@@ -101,7 +105,7 @@ class RunFactory extends Command
      *
      * @return array
      */
-    protected function content(): array
+    protected function contentTypes(): array
     {
         $content = [];
 
@@ -136,13 +140,41 @@ class RunFactory extends Command
     }
 
     /**
+     * Get the blueprint handles.
+     *
+     * @return array
+     */
+    protected function blueprintHandles(string $contentType, string $contentHandle): array
+    {
+        return $this->blueprints($contentType, $contentHandle)->map(function ($blueprint) {
+            return $blueprint->handle();
+        })->toArray();
+    }
+
+    /**
+     * Get the blueprints of the content.
+     *
+     * @return SupportCollection
+     */
+    protected function blueprints(string $contentType, string $contentHandle): SupportCollection
+    {
+        if ($contentType === 'Collection') {
+            return Collection::find($contentHandle)->entryBlueprints();
+        }
+
+        if ($contentType === 'Taxonomy') {
+            return Taxonomy::find($contentHandle)->termBlueprints();
+        }
+    }
+
+    /**
      * Check if there's any content.
      *
      * @return bool
      */
     protected function hasContent(): bool
     {
-        if (empty($this->content())) {
+        if (empty($this->contentTypes())) {
             $this->error('You need at least one collection or taxonomy to use the factory.');
 
             return false;

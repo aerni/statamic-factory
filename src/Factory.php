@@ -4,10 +4,12 @@ namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
+use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
+use Statamic\Facades\User;
 use Statamic\Support\Str;
 
 class Factory
@@ -20,21 +22,28 @@ class Factory
     protected $faker;
 
     /**
-     * The type of content
+     * The type of content.
      *
      * @var string
      */
     protected $contentType;
 
     /**
-     * The handle of the content
+     * The handle of the content.
      *
      * @var string
      */
-    protected $handle;
+    protected $contentHandle;
 
     /**
-     * The amount of entries/terms to create
+     * The handle of the blueprint.
+     *
+     * @var string
+     */
+    protected $blueprintHandle;
+
+    /**
+     * The amount of entries/terms to create.
      *
      * @var int
      */
@@ -68,18 +77,20 @@ class Factory
      * Run the factory.
      *
      * @param string $contentType
-     * @param string $handle
+     * @param string $contentHandle
+     * @param string $blueprintHandle
      * @param int $amount
      * @return void
      */
-    public function run(string $contentType, string $handle, int $amount): void
+    public function run(string $contentType, string $contentHandle, string $blueprintHandle, int $amount): void
     {
         $this->contentType = $contentType;
-        $this->handle = $handle;
+        $this->contentHandle = $contentHandle;
+        $this->blueprintHandle = $blueprintHandle;
         $this->amount = $amount;
 
         $this->content = $this->content();
-        $this->fakeableItems = $this->fakeableItems($this->blueprints());
+        $this->fakeableItems = $this->fakeableItems();
 
         $this->makeContent();
     }
@@ -92,70 +103,36 @@ class Factory
     protected function content()
     {
         if ($this->contentType === 'Collection') {
-            return Collection::find($this->handle);
+            return Collection::find($this->contentHandle);
         }
 
         if ($this->contentType === 'Taxonomy') {
-            return Taxonomy::find($this->handle);
+            return Taxonomy::find($this->contentHandle);
         }
     }
 
     /**
-     * Get the blueprints of the content.
+     * Get the fakeable items from the blueprint.
      *
      * @return SupportCollection
      */
-    protected function blueprints(): SupportCollection
+    protected function fakeableItems(): SupportCollection
     {
-        if ($this->contentType === 'Collection') {
-            return $this->content->entryBlueprints();
-        }
+        $blueprintItems = Blueprint::find($this->blueprintHandle)->fields()->items();
 
-        if ($this->contentType === 'Taxonomy') {
-            return $this->content->termBlueprints();
-        }
-    }
+        $filtered = $this->filterItems($blueprintItems);
+        $mapped = $this->mapItems($filtered);
 
-    /**
-     * Get the fakeable items.
-     *
-     * @param SupportCollection $blueprints
-     * @return SupportCollection
-     */
-    protected function fakeableItems(SupportCollection $blueprints): SupportCollection
-    {
-        $items = $blueprints->map(function ($blueprint) {
-            return $blueprint->fields()->items();
-        });
-
-        $filtered = $items->mapWithKeys(function ($item) {
-            return $this->processItems($item);
-        });
-
-        return $filtered;
-    }
-
-    /**
-     * Process Items.
-     *
-     * @param SupportCollection $items
-     * @return SupportCollection
-     */
-    protected function processItems(SupportCollection $items): SupportCollection
-    {
-        $filtered = $this->filterFields($items);
-        $mapped = $this->mapFieldItems($filtered);
-        
         return $mapped;
     }
 
     /**
-     * Only return items that include a "faker" field
+     * Only return items that include a "faker" key.
      *
      * @param SupportCollection $items
      * @return SupportCollection
      */
-    protected function filterFields(SupportCollection $items): SupportCollection
+    protected function filterItems(SupportCollection $items): SupportCollection
     {
         return $items->filter(function ($value) {
             return collect($value['field'])->has('faker');
@@ -163,12 +140,12 @@ class Factory
     }
 
     /**
-     * Map the field items.
+     * Map the items.
      *
      * @param SupportCollection $items
      * @return SupportCollection
      */
-    protected function mapFieldItems(SupportCollection $items): SupportCollection
+    protected function mapItems(SupportCollection $items): SupportCollection
     {
         return $items->flatMap(function ($item) {
             return [
@@ -178,30 +155,7 @@ class Factory
     }
 
     /**
-     * Create fake data.
-     *
-     * @return SupportCollection
-     */
-    protected function fakeData(): SupportCollection
-    {
-        return $this->fakeableItems->map(function ($item) {
-            return $this->fakeItem($item);
-        });
-    }
-
-    /**
-     * Create a fake item of the given type.
-     *
-     * @param string $type
-     * @return string
-     */
-    protected function fakeItem(string $type): string
-    {
-        return $this->faker->$type;
-    }
-
-    /**
-     * Create content.
+     * Make content based on its type.
      *
      * @return void
      */
@@ -217,7 +171,7 @@ class Factory
     }
 
     /**
-     * Create an entry with the fake data.
+     * Create $amount of entries with fake data.
      *
      * @param int $amount
      * @return void
@@ -230,22 +184,25 @@ class Factory
             ]);
 
             Entry::make()
-                ->collection($this->content->handle())
-                ->locale('default')
+                ->collection($this->contentHandle)
+                ->blueprint($this->blueprintHandle)
+                ->locale(key(config('statamic.sites.sites')))
                 ->published(true)
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
+                ->set('updated_by', User::all()->random()->id())
+                ->set('updated_at', now()->timestamp)
                 ->save();
         }
     }
 
     /**
-     * Create a term with the fake data.
+     * Create $amount of terms with fake data.
      *
      * @param int $amount
-     * @return mixed
+     * @return void
      */
-    protected function makeTerm(int $amount)
+    protected function makeTerm(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
             $fakeData = $this->fakeData()->merge([
@@ -253,11 +210,34 @@ class Factory
             ]);
 
             Term::make()
-                ->taxonomy($this->content->handle())
+                ->taxonomy($this->contentHandle)
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
                 ->save();
         }
+    }
+
+    /**
+     * Create fake data for the fakeable items.
+     *
+     * @return SupportCollection
+     */
+    protected function fakeData(): SupportCollection
+    {
+        return $this->fakeableItems->map(function ($item) {
+            return $this->fakeItem($item);
+        });
+    }
+
+    /**
+     * Create fake data of the given type.
+     *
+     * @param string $type
+     * @return string
+     */
+    protected function fakeItem(string $type): string
+    {
+        return $this->faker->$type;
     }
 
     /**
