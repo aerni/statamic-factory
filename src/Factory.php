@@ -22,6 +22,13 @@ class Factory
     protected $faker;
 
     /**
+     * The config of the factory.
+     *
+     * @var array
+     */
+    protected $config;
+
+    /**
      * The type of content.
      *
      * @var string
@@ -71,6 +78,7 @@ class Factory
     public function __construct(Faker $faker)
     {
         $this->faker = $faker;
+        $this->config = config('factory');
     }
 
     /**
@@ -180,14 +188,14 @@ class Factory
     {
         for ($i = 0; $i < $amount; $i++) {
             $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(rand(1, 5)),
+                'title' => $this->title(),
             ]);
 
             Entry::make()
                 ->collection($this->contentHandle)
                 ->blueprint($this->blueprintHandle)
                 ->locale(key(config('statamic.sites.sites')))
-                ->published(true)
+                ->published($this->config['published'])
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
                 ->set('updated_by', User::all()->random()->id())
@@ -206,7 +214,7 @@ class Factory
     {
         for ($i = 0; $i < $amount; $i++) {
             $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(rand(1, 5)),
+                'title' => $this->title(),
             ]);
 
             Term::make()
@@ -241,15 +249,22 @@ class Factory
     }
 
     /**
-     * Create a title using faker.
+     * Create a fake title.
      *
-     * @param int $wordCount
      * @return string
      */
-    protected function title(int $wordCount): string
+    protected function title(): string
     {
-        $sentence = $this->faker->sentence($wordCount);
+        $lorem = $this->config['title']['lorem'];
+        $minChars = $this->config['title']['chars'][0];
+        $maxChars = $this->config['title']['chars'][1];
 
-        return substr($sentence, 0, strlen($sentence) - 1);
+        if ($lorem) {
+            $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
+            return Str::removeRight($title, '.');
+        }
+
+        $title = $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
+        return Str::removeRight($title, '.');
     }
 }

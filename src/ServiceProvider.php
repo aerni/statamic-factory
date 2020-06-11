@@ -11,6 +11,12 @@ class ServiceProvider extends AddonServiceProvider
     {
         parent::boot();
 
+        $this->mergeConfigFrom(__DIR__.'/../config/factory.php', 'factory');
+
+        $this->publishes([
+            __DIR__.'/../config/factory.php' => config_path('factory.php'),
+        ]);
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 RunFactory::class,
