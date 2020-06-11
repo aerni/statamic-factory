@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Collection;
+use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Taxonomy;
 
 class RunFactory extends Command
@@ -56,7 +57,7 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Asset', 'Collection', 'Taxonomy']
+            ['Asset', 'Collection', 'Globals', 'Taxonomy']
         );
 
         if ($contentType === 'Asset' && $this->hasAssetContainers()) {
@@ -77,6 +78,11 @@ class RunFactory extends Command
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
+        }
+
+        if ($contentType === 'Globals' && $this->hasGlobals()) {
+            $contentHandle = $this->choice('Choose a global set', $this->globals());
+            $blueprintHandle = $this->globalBlueprint($contentHandle);
         }
 
         if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
@@ -134,6 +140,18 @@ class RunFactory extends Command
     }
 
     /**
+     * Get the available global handles.
+     *
+     * @return array
+     */
+    protected function globals(): array
+    {
+        return GlobalSet::all()->map(function ($container) {
+            return $container->handle();
+        })->toArray();
+    }
+
+    /**
      * Get the available taxonomy handles.
      *
      * @return array
@@ -148,7 +166,7 @@ class RunFactory extends Command
      *
      * @return string
      */
-    protected function assetBlueprint($contentHandle): string
+    protected function assetBlueprint(string $contentHandle): string
     {
         return AssetContainer::find($contentHandle)->blueprint();
     }
@@ -158,7 +176,7 @@ class RunFactory extends Command
      *
      * @return array
      */
-    protected function collectionBlueprints($contentHandle): array
+    protected function collectionBlueprints(string $contentHandle): array
     {
         return Collection::find($contentHandle)
             ->entryBlueprints()
@@ -169,11 +187,21 @@ class RunFactory extends Command
     }
 
     /**
+     * Get the blueprint handle of a global set.
+     *
+     * @return string
+     */
+    protected function globalBlueprint(string $contentHandle): string
+    {
+        return GlobalSet::find($contentHandle)->blueprint();
+    }
+
+    /**
      * Get the blueprint handles of a taxonomy.
      *
      * @return array
      */
-    protected function taxonomyBlueprints($contentHandle): array
+    protected function taxonomyBlueprints(string $contentHandle): array
     {
         return Taxonomy::find($contentHandle)
             ->termBlueprints()
@@ -207,6 +235,21 @@ class RunFactory extends Command
     {
         if (empty($this->collections())) {
             $this->error('You have no collections. Create at least one collection to use the factory.');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if there's any global sets.
+     *
+     * @return bool
+     */
+    protected function hasGlobals(): bool
+    {
+        if (empty($this->globals())) {
+            $this->error('You have no globals. Create at least one global set to use the factory.');
             return false;
         }
 
