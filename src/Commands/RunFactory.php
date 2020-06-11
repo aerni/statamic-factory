@@ -54,25 +54,27 @@ class RunFactory extends Command
      */
     public function handle(): void
     {
-        if ($this->hasContent()) {
-            $contentType = $this->choice('Choose the type of content you want to create', $this->contentTypes());
+        $contentType = $this->choice(
+            'Choose the type of content you want to create',
+            ['Collection', 'Taxonomy']
+        );
         }
-
-        if ($contentType === 'Collection') {
+        
+        if ($contentType === 'Collection' && $this->hasCollections()) {
             $contentHandle = $this->choice('Choose a collection', $this->collections());
-            $blueprintHandle = $this->choice("Choose a blueprint to create ${contentHandle} from", $this->blueprintHandles($contentType, $contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->blueprintHandles($contentType, $contentHandle));
             $amount = $this->askValid(
-                "How many ${contentHandle} do you want to create?",
+                'How many entries do you want to create?',
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
 
-        if ($contentType === 'Taxonomy') {
+        if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
             $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
-            $blueprintHandle = $this->choice("Choose a blueprint to create ${contentHandle} from", $this->blueprintHandles($contentType, $contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->blueprintHandles($contentType, $contentHandle));
             $amount = $this->askValid(
-                "How many ${contentHandle} do you want to create?",
+                'How many terms do you want to create?',
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
@@ -98,25 +100,6 @@ class RunFactory extends Command
         } catch (\Exception $exception) {
             $this->error($exception->getMessage());
         }
-    }
-
-    /**
-     * Get an array of available content types.
-     *
-     * @return array
-     */
-    protected function contentTypes(): array
-    {
-        $content = [];
-
-        if ($this->hasCollections()) {
-            $content[] = 'Collection';
-        }
-        if ($this->hasTaxonomies()) {
-            $content[] = 'Taxonomy';
-        }
-
-        return $content;
     }
 
     /**
@@ -168,22 +151,6 @@ class RunFactory extends Command
     }
 
     /**
-     * Check if there's any content.
-     *
-     * @return bool
-     */
-    protected function hasContent(): bool
-    {
-        if (empty($this->contentTypes())) {
-            $this->error('You need at least one collection or taxonomy to use the factory.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Check if there's any collections.
      *
      * @return bool
@@ -191,6 +158,7 @@ class RunFactory extends Command
     protected function hasCollections(): bool
     {
         if (empty($this->collections())) {
+            $this->error('You have no collections. Create at least one collection to use the factory.');
             return false;
         }
 
@@ -205,6 +173,7 @@ class RunFactory extends Command
     protected function hasTaxonomies(): bool
     {
         if (empty($this->taxonomies())) {
+            $this->error('You have no taxonomies. Create at least one taxonomy to use the factory.');
             return false;
         }
 
