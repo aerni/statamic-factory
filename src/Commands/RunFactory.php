@@ -4,9 +4,9 @@ namespace Aerni\Factory\Commands;
 
 use Aerni\Factory\Factory;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Validator;
 use Statamic\Console\RunsInPlease;
+use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
 
@@ -56,13 +56,22 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Collection', 'Taxonomy']
+            ['Asset', 'Collection', 'Taxonomy']
         );
+
+        if ($contentType === 'Asset' && $this->hasAssetContainers()) {
+            $contentHandle = $this->choice('Choose an asset container', $this->assetContainers());
+            $blueprintHandle = $this->assetBlueprint($contentHandle);
+            $amount = $this->askValid(
+                "How many assets do you want to create?",
+                'amount',
+                ['required', 'numeric', 'min:1']
+            );
         }
         
         if ($contentType === 'Collection' && $this->hasCollections()) {
             $contentHandle = $this->choice('Choose a collection', $this->collections());
-            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->blueprintHandles($contentType, $contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->collectionBlueprints($contentHandle));
             $amount = $this->askValid(
                 'How many entries do you want to create?',
                 'amount',
@@ -72,7 +81,7 @@ class RunFactory extends Command
 
         if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
             $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
-            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->blueprintHandles($contentType, $contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->taxonomyBlueprints($contentHandle));
             $amount = $this->askValid(
                 'How many terms do you want to create?',
                 'amount',
@@ -103,7 +112,19 @@ class RunFactory extends Command
     }
 
     /**
-     * Get an array of available collection handles.
+     * Get the available asset container handles.
+     *
+     * @return array
+     */
+    protected function assetContainers(): array
+    {
+        return AssetContainer::all()->map(function ($container) {
+            return $container->handle();
+        })->toArray();
+    }
+
+    /**
+     * Get the available collection handles.
      *
      * @return array
      */
@@ -113,7 +134,7 @@ class RunFactory extends Command
     }
 
     /**
-     * Get an array of available taxonomy handles.
+     * Get the available taxonomy handles.
      *
      * @return array
      */
@@ -123,31 +144,58 @@ class RunFactory extends Command
     }
 
     /**
-     * Get the blueprint handles.
+     * Get the blueprint handle of an asset container.
      *
-     * @return array
+     * @return string
      */
-    protected function blueprintHandles(string $contentType, string $contentHandle): array
+    protected function assetBlueprint($contentHandle): string
     {
-        return $this->blueprints($contentType, $contentHandle)->map(function ($blueprint) {
-            return $blueprint->handle();
-        })->toArray();
+        return AssetContainer::find($contentHandle)->blueprint();
     }
 
     /**
-     * Get the blueprints of the content.
+     * Get the blueprint handles of a collection.
      *
-     * @return SupportCollection
+     * @return array
      */
-    protected function blueprints(string $contentType, string $contentHandle): SupportCollection
+    protected function collectionBlueprints($contentHandle): array
     {
-        if ($contentType === 'Collection') {
-            return Collection::find($contentHandle)->entryBlueprints();
+        return Collection::find($contentHandle)
+            ->entryBlueprints()
+            ->map(function ($blueprint) {
+                return $blueprint->handle();
+            })
+            ->toArray();;
+    }
+
+    /**
+     * Get the blueprint handles of a taxonomy.
+     *
+     * @return array
+     */
+    protected function taxonomyBlueprints($contentHandle): array
+    {
+        return Taxonomy::find($contentHandle)
+            ->termBlueprints()
+            ->map(function ($blueprint) {
+                return $blueprint->handle();
+            })
+            ->toArray();;
+    }
+
+    /**
+     * Check if there's any asset containers.
+     *
+     * @return bool
+     */
+    protected function hasAssetContainers(): bool
+    {
+        if (empty($this->assetContainers())) {
+            $this->error('You have no asset containers. Create at least one asset container to use the factory.');
+            return false;
         }
 
-        if ($contentType === 'Taxonomy') {
-            return Taxonomy::find($contentHandle)->termBlueprints();
-        }
+        return true;
     }
 
     /**
