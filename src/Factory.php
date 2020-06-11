@@ -215,8 +215,11 @@ class Factory
 
             Term::make()
                 ->taxonomy($this->contentHandle)
+                ->blueprint($this->blueprintHandle)
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
+                ->set('updated_by', User::all()->random()->id())
+                ->set('updated_at', now()->timestamp)
                 ->save();
         }
     }
