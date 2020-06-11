@@ -111,7 +111,7 @@ class RunFactory extends Command
     {
         try {
             $this->factory->run($contentType, $contentHandle, $blueprintHandle, $amount);
-            $this->info('Your fake content was successfully created!');
+            $this->info('🎉 The factory was successfull!');
         } catch (\Exception $exception) {
             $this->error($exception->getMessage());
         }
