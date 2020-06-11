@@ -187,9 +187,7 @@ class Factory
     protected function makeEntry(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-            $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(),
-            ]);
+            $fakeData = $this->fakeData();
 
             Entry::make()
                 ->collection($this->contentHandle)
@@ -213,9 +211,7 @@ class Factory
     protected function makeTerm(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-            $fakeData = $this->fakeData()->merge([
-                'title' => $this->title(),
-            ]);
+            $fakeData = $this->fakeData();
 
             Term::make()
                 ->taxonomy($this->contentHandle)
@@ -232,9 +228,13 @@ class Factory
      */
     protected function fakeData(): SupportCollection
     {
-        return $this->fakeableItems->map(function ($item) {
+        $fakeData = $this->fakeableItems->map(function ($item) {
             return $this->fakeItem($item);
         });
+
+        return collect([
+            'title' => $this->title(),
+        ])->merge($fakeData);
     }
 
     /**
