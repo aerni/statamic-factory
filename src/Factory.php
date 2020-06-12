@@ -272,7 +272,6 @@ class Factory
          * This handles Faker formatters with arguments.
          */
         if (Str::containsAll($fakerFormatter, ['(', ')'])) {
-
             $method = Str::of($fakerFormatter)->before('(')->__toString();
             $arguments = Str::between($fakerFormatter, '(', ')');
 
@@ -281,7 +280,6 @@ class Factory
 
             // Transform each array value to its correct type.
             $argumentsArray = array_map(function ($item) {
-
                 if (is_numeric($item)) {
                     return (int) $item;
                 }
@@ -295,12 +293,10 @@ class Factory
                 }
 
                 return (string) $item;
-
             }, $argumentsArray);
 
             // Pass each array value as argument to the Faker formatter.
-            return call_user_func_array(array($this->faker, $method), $argumentsArray);
-            
+            return call_user_func_array([$this->faker, $method], $argumentsArray);
         }
         
         /**
