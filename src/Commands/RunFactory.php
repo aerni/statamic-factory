@@ -57,7 +57,7 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Asset', 'Collection', 'Globals', 'Taxonomy']
+            ['Asset', 'Collection', 'Global', 'Taxonomy']
         );
 
         if ($contentType === 'Asset' && $this->hasAssetContainers()) {
@@ -80,9 +80,10 @@ class RunFactory extends Command
             );
         }
 
-        if ($contentType === 'Globals' && $this->hasGlobals()) {
+        if ($contentType === 'Global' && $this->hasGlobals()) {
             $contentHandle = $this->choice('Choose a global set', $this->globals());
             $blueprintHandle = $this->globalBlueprint($contentHandle);
+            $amount = 1;
         }
 
         if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
@@ -94,7 +95,7 @@ class RunFactory extends Command
                 ['required', 'numeric', 'min:1']
             );
         }
-
+        
         $this->runFactory($contentType, $contentHandle, $blueprintHandle, $amount);
     }
 

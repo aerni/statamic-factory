@@ -4,10 +4,11 @@ namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
+use Statamic\Facades\Asset;
+use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
-use Statamic\Facades\Taxonomy;
+use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 use Statamic\Support\Str;
@@ -57,20 +58,6 @@ class Factory
     protected $amount;
 
     /**
-     * The content.
-     *
-     * @var SupportCollection
-     */
-    protected $content;
-
-    /**
-     * The fakeable items from the blueprints.
-     *
-     * @var SupportCollection
-     */
-    protected $fakeableItems;
-
-    /**
      * Create a new factory instance.
      *
      * @return void
@@ -97,26 +84,7 @@ class Factory
         $this->blueprintHandle = $blueprintHandle;
         $this->amount = $amount;
 
-        $this->content = $this->content();
-        $this->fakeableItems = $this->fakeableItems();
-
         $this->makeContent();
-    }
-
-    /**
-     * Get the content.
-     *
-     * @return mixed
-     */
-    protected function content()
-    {
-        if ($this->contentType === 'Collection') {
-            return Collection::find($this->contentHandle);
-        }
-
-        if ($this->contentType === 'Taxonomy') {
-            return Taxonomy::find($this->contentHandle);
-        }
     }
 
     /**
@@ -169,12 +137,49 @@ class Factory
      */
     protected function makeContent(): void
     {
+        if ($this->contentType === 'Asset') {
+            $this->makeAsset($this->amount);
+        }
+
         if ($this->contentType === 'Collection') {
             $this->makeEntry($this->amount);
         }
 
+        if ($this->contentType === 'Global') {
+            $this->makeGlobal();
+        }
+
         if ($this->contentType === 'Taxonomy') {
             $this->makeTerm($this->amount);
+        }
+    }
+
+    /**
+     * Create $amount of assets with fake data.
+     *
+     * @param int $amount
+     * @return void
+     */
+    protected function makeAsset(int $amount): void
+    {
+        $diskPath = AssetContainer::find($this->contentHandle)->diskPath();
+
+        for ($i = 0; $i < $amount; $i++) {
+
+            $fakeData = $this->fakeData();
+
+            $image = $this->faker->image(
+                $diskPath,
+                $this->config['assets']['width'],
+                $this->config['assets']['height'],
+                $this->config['assets']['category'],
+                false
+            );
+
+            Asset::findById($this->contentHandle . '::' . $image)
+                ->data($fakeData)
+                ->save();
+
         }
     }
 
@@ -187,7 +192,10 @@ class Factory
     protected function makeEntry(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-            $fakeData = $this->fakeData();
+
+            $fakeData = collect([
+                'title' => $this->title(),
+            ])->merge($this->fakeData());
 
             Entry::make()
                 ->collection($this->contentHandle)
@@ -199,7 +207,20 @@ class Factory
                 ->set('updated_by', User::all()->random()->id())
                 ->set('updated_at', now()->timestamp)
                 ->save();
+
         }
+    }
+
+    /**
+     * Fill the global set with fake data.
+     *
+     * @return void
+     */
+    protected function makeGlobal(): void
+    {
+        $fakeData = $this->fakeData();
+        
+        dd(GlobalSet::find($this->contentHandle)->fileData());
     }
 
     /**
@@ -211,7 +232,10 @@ class Factory
     protected function makeTerm(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-            $fakeData = $this->fakeData();
+
+            $fakeData = collect([
+                'title' => $this->title(),
+            ])->merge($this->fakeData());
 
             Term::make()
                 ->taxonomy($this->contentHandle)
@@ -221,6 +245,7 @@ class Factory
                 ->set('updated_by', User::all()->random()->id())
                 ->set('updated_at', now()->timestamp)
                 ->save();
+                
         }
     }
 
@@ -231,13 +256,9 @@ class Factory
      */
     protected function fakeData(): SupportCollection
     {
-        $fakeData = $this->fakeableItems->map(function ($item) {
+        return $this->fakeableItems()->map(function ($item) {
             return $this->fakeItem($item);
         });
-
-        return collect([
-            'title' => $this->title(),
-        ])->merge($fakeData);
     }
 
     /**
@@ -263,11 +284,9 @@ class Factory
         $maxChars = $this->config['title']['chars'][1];
 
         if ($lorem) {
-            $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
-            return Str::removeRight($title, '.');
+            return $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
         }
 
-        $title = $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
-        return Str::removeRight($title, '.');
+        return $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
     }
 }
