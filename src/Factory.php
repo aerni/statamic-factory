@@ -11,7 +11,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
-use Statamic\Support\Str;
+use Illuminate\Support\Str;
 
 class Factory
 {
@@ -268,7 +268,14 @@ class Factory
      */
     protected function fakeItem(string $type): string
     {
-        return $this->faker->$type;
+        if (Str::contains($type, '(')) {
+            $function = Str::of($type)->before('(')->__toString();
+            $arguments = Str::between($type, '(', ')');
+            
+            return $this->faker->$function($arguments);
+        }
+        
+        return $this->faker->$type();
     }
 
     /**
