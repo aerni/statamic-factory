@@ -4,6 +4,7 @@ namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Str;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -11,7 +12,6 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
-use Illuminate\Support\Str;
 
 class Factory
 {
