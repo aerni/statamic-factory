@@ -255,27 +255,58 @@ class Factory
      */
     protected function fakeData(): SupportCollection
     {
-        return $this->fakeableItems()->map(function ($item) {
-            return $this->fakeItem($item);
+        return $this->fakeableItems()->map(function ($fakerFormatter) {
+            return $this->fakeItem($fakerFormatter);
         });
     }
 
     /**
-     * Create fake data of the given type.
+     * Create fake data with the given Faker formatter.
      *
-     * @param string $type
-     * @return string
+     * @param string $fakerFormatter
+     * @return mixed
      */
-    protected function fakeItem(string $type): string
+    protected function fakeItem(string $fakerFormatter)
     {
-        if (Str::contains($type, '(')) {
-            $function = Str::of($type)->before('(')->__toString();
-            $arguments = Str::between($type, '(', ')');
+        /**
+         * This handles Faker formatters with arguments.
+         */
+        if (Str::containsAll($fakerFormatter, ['(', ')'])) {
+
+            $method = Str::of($fakerFormatter)->before('(')->__toString();
+            $arguments = Str::between($fakerFormatter, '(', ')');
+
+            // Create an array of arguments and trim each value.
+            $argumentsArray = array_map('trim', explode(',', $arguments));
+
+            // Transform each array value to its correct type.
+            $argumentsArray = array_map(function ($item) {
+
+                if (is_numeric($item)) {
+                    return (int) $item;
+                }
+
+                if ($item === 'true') {
+                    return (bool) true;
+                }
+
+                if ($item === 'false') {
+                    return (bool) false;
+                }
+
+                return (string) $item;
+
+            }, $argumentsArray);
+
+            // Pass each array value as argument to the Faker formatter.
+            return call_user_func_array(array($this->faker, $method), $argumentsArray);
             
-            return $this->faker->$function($arguments);
         }
         
-        return $this->faker->$type();
+        /**
+         * This handles simple Faker formatters.
+         */
+        return $this->faker->$fakerFormatter();
     }
 
     /**
