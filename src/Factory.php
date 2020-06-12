@@ -157,7 +157,7 @@ class Factory
     /**
      * TODO: Fakers image implementation is unstable. Use another implementation to create fake images.
      * TODO: Make image creation optional and instead focus on creating fake data for existing assets based on the container's blueprint.
-     * 
+     *
      * Create $amount of assets with fake data.
      *
      * @param int $amount
@@ -168,7 +168,6 @@ class Factory
         $diskPath = AssetContainer::find($this->contentHandle)->diskPath();
 
         for ($i = 0; $i < $amount; $i++) {
-
             $fakeData = $this->fakeData();
 
             $image = $this->faker->image(
@@ -182,7 +181,6 @@ class Factory
             Asset::findById($this->contentHandle . '::' . $image)
                 ->data($fakeData)
                 ->save();
-
         }
     }
 
@@ -195,7 +193,6 @@ class Factory
     protected function makeEntry(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-
             $fakeData = collect([
                 'title' => $this->title(),
             ])->merge($this->fakeData());
@@ -210,13 +207,12 @@ class Factory
                 ->set('updated_by', User::all()->random()->id())
                 ->set('updated_at', now()->timestamp)
                 ->save();
-
         }
     }
 
     /**
      * TODO: Figure out how to save data to a Global Set.
-     * 
+     *
      * Fill the global set with fake data.
      *
      * @return void
@@ -237,7 +233,6 @@ class Factory
     protected function makeTerm(int $amount): void
     {
         for ($i = 0; $i < $amount; $i++) {
-
             $fakeData = collect([
                 'title' => $this->title(),
             ])->merge($this->fakeData());
@@ -250,7 +245,6 @@ class Factory
                 ->set('updated_by', User::all()->random()->id())
                 ->set('updated_at', now()->timestamp)
                 ->save();
-                
         }
     }
 

@@ -184,7 +184,8 @@ class RunFactory extends Command
             ->map(function ($blueprint) {
                 return $blueprint->handle();
             })
-            ->toArray();;
+            ->toArray();
+        ;
     }
 
     /**
@@ -209,7 +210,8 @@ class RunFactory extends Command
             ->map(function ($blueprint) {
                 return $blueprint->handle();
             })
-            ->toArray();;
+            ->toArray();
+        ;
     }
 
     /**
@@ -221,6 +223,7 @@ class RunFactory extends Command
     {
         if (empty($this->assetContainers())) {
             $this->error('You have no asset containers. Create at least one asset container to use the factory.');
+
             return false;
         }
 
@@ -236,6 +239,7 @@ class RunFactory extends Command
     {
         if (empty($this->collections())) {
             $this->error('You have no collections. Create at least one collection to use the factory.');
+
             return false;
         }
 
@@ -251,6 +255,7 @@ class RunFactory extends Command
     {
         if (empty($this->globals())) {
             $this->error('You have no globals. Create at least one global set to use the factory.');
+
             return false;
         }
 
@@ -266,6 +271,7 @@ class RunFactory extends Command
     {
         if (empty($this->taxonomies())) {
             $this->error('You have no taxonomies. Create at least one taxonomy to use the factory.');
+
             return false;
         }
 
