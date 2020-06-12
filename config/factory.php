@@ -34,23 +34,4 @@ return [
         'lorem' => false,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Assets Settings
-    |--------------------------------------------------------------------------
-    |
-    | The settings that will be used to create image assets.
-    |
-    | 'width': The width of the generated image in pixels.
-    | 'height': The height of the generated image in pixels.
-    | 'category': The image category. Set to 'null' to get a random category.
-    |
-    */
-
-    'assets' => [
-        'width' => 200,
-        'height' => 200,
-        'category' => null,
-    ],
-
 ];

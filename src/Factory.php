@@ -155,6 +155,9 @@ class Factory
     }
 
     /**
+     * TODO: Fakers image implementation is unstable. Use another implementation to create fake images.
+     * TODO: Make image creation optional and instead focus on creating fake data for existing assets based on the container's blueprint.
+     * 
      * Create $amount of assets with fake data.
      *
      * @param int $amount
@@ -212,6 +215,8 @@ class Factory
     }
 
     /**
+     * TODO: Figure out how to save data to a Global Set.
+     * 
      * Fill the global set with fake data.
      *
      * @return void

@@ -57,18 +57,18 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Asset', 'Collection', 'Global', 'Taxonomy']
+            ['Collection', 'Taxonomy']
         );
 
-        if ($contentType === 'Asset' && $this->hasAssetContainers()) {
-            $contentHandle = $this->choice('Choose an asset container', $this->assetContainers());
-            $blueprintHandle = $this->assetBlueprint($contentHandle);
-            $amount = $this->askValid(
-                "How many assets do you want to create?",
-                'amount',
-                ['required', 'numeric', 'min:1']
-            );
-        }
+        // if ($contentType === 'Asset' && $this->hasAssetContainers()) {
+        //     $contentHandle = $this->choice('Choose an asset container', $this->assetContainers());
+        //     $blueprintHandle = $this->assetBlueprint($contentHandle);
+        //     $amount = $this->askValid(
+        //         "How many assets do you want to create?",
+        //         'amount',
+        //         ['required', 'numeric', 'min:1']
+        //     );
+        // }
         
         if ($contentType === 'Collection' && $this->hasCollections()) {
             $contentHandle = $this->choice('Choose a collection', $this->collections());
@@ -80,11 +80,11 @@ class RunFactory extends Command
             );
         }
 
-        if ($contentType === 'Global' && $this->hasGlobals()) {
-            $contentHandle = $this->choice('Choose a global set', $this->globals());
-            $blueprintHandle = $this->globalBlueprint($contentHandle);
-            $amount = 1;
-        }
+        // if ($contentType === 'Global' && $this->hasGlobals()) {
+        //     $contentHandle = $this->choice('Choose a global set', $this->globals());
+        //     $blueprintHandle = $this->globalBlueprint($contentHandle);
+        //     $amount = 1;
+        // }
 
         if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
             $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
