@@ -18,11 +18,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Title Settings
+    | Title Fallback Settings
     |--------------------------------------------------------------------------
     |
-    | These settings will be used to create titles of collection entries
-    | and taxonomy terms.
+    | These title settings will function as a fallback to create titles for
+    | your collection entries and taxonomy terms, if you didn't explicitly set
+    | a 'title' field in the respective blueprint.
     |
     | 'chars': The character count of the title will be in this range.
     | 'real_text': Use real english words by setting this to 'true'.
