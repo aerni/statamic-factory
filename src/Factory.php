@@ -2,6 +2,7 @@
 
 namespace Aerni\Factory;
 
+use Aerni\Factory\Utils;
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
@@ -88,18 +89,89 @@ class Factory
     }
 
     /**
-     * Get the fakeable items from the blueprint.
+     * Get the items of the blueprint.
      *
      * @return SupportCollection
      */
-    protected function fakeableItems(): SupportCollection
+    protected function blueprintItems(): SupportCollection
     {
-        $blueprintItems = Blueprint::find($this->blueprintHandle)->fields()->items();
+        return Blueprint::find($this->blueprintHandle)->fields()->items();
+    }
 
-        $filtered = $this->filterItems($blueprintItems);
+    /**
+     * Handle special fieldtypes.
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function handleSpecialFieldtypes(array $item): array
+    {
+        if ($item['field']['type'] === 'table') {
+            return $this->mapTable($item);
+        }
+    }
+
+    /**
+     * Map table fieldtype to the expected structure of its saved data.
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function mapTable(array $item): array
+    {
+        $handle = $item['handle'];
+        $rowCount = $item['field']['factory']['rows'];
+        $cellCount = $item['field']['factory']['cells'];
+        $fakerFormatter = $item['field']['factory']['faker'];
+
+        $table = [
+            $handle => []
+        ];
+
+        for ($i = 0 ; $i < $rowCount; $i++) {
+            array_push($table[$handle], [
+                'cells' => []
+            ]);
+        }
+
+        $table[$handle] = array_map(function ($item) use ($cellCount, $fakerFormatter) {
+            for ($i = 0 ; $i < $cellCount; $i++) {
+                array_push($item['cells'], $fakerFormatter);
+            }
+            return $item;
+        }, $table[$handle]);
+
+        return $table;
+    }
+
+    /**
+     * Check if the passed item is a special field type.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function isSpecialFieldtype(array $item): bool
+    {
+        $specialFieldtypes = ['table'];
+
+        if (in_array($item['field']['type'], $specialFieldtypes)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the fakeable items from the blueprint.
+     *
+     * @return array
+     */
+    protected function fakeableItems(): array
+    {
+        $filtered = $this->filterItems($this->blueprintItems());
         $mapped = $this->mapItems($filtered);
 
-        return $mapped;
+        return $mapped->toArray();
     }
 
     /**
@@ -111,7 +183,7 @@ class Factory
     protected function filterItems(SupportCollection $items): SupportCollection
     {
         return $items->filter(function ($value) {
-            return collect($value['field'])->has('faker');
+            return collect($value['field'])->has('factory');
         });
     }
 
@@ -124,9 +196,13 @@ class Factory
     protected function mapItems(SupportCollection $items): SupportCollection
     {
         return $items->flatMap(function ($item) {
-            return [
-                $item['handle'] => $item['field']['faker'],
-            ];
+            if ($this->isSpecialFieldtype($item)) {
+                return $this->handleSpecialFieldtypes($item);
+            } else {
+                return [
+                    $item['handle'] => $item['field']['factory'],
+                ];
+            }
         });
     }
 
@@ -251,11 +327,11 @@ class Factory
     /**
      * Create fake data for the fakeable items.
      *
-     * @return SupportCollection
+     * @return array
      */
-    protected function fakeData(): SupportCollection
+    protected function fakeData(): array
     {
-        return $this->fakeableItems()->map(function ($fakerFormatter) {
+        return Utils::array_map_recursive($this->fakeableItems(), function ($fakerFormatter) {
             return $this->fakeItem($fakerFormatter);
         });
     }

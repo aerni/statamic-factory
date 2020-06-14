@@ -59,7 +59,7 @@ return [
 
 ## Basic Usage
 
-Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `faker` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
+Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
 
 This is an example blueprint for a collection of people:
 ```yaml
@@ -72,26 +72,51 @@ sections:
         handle: first_name
         field:
           type: text
-          faker: firstName
+          factory: firstName
       -
         handle: last_name
         field:
           type: text
-          faker: lastName
+          factory: lastName
       -
         handle: age
         field:
           type: number
-          faker: numberBetween(20, 50)
+          factory: numberBetween(20, 50)
       -
         handle: bio
         field:
           type: textarea
-          faker: paragraph(3, true)
+          factory: paragraph(3, true)
 ```
 
 Run the factory in your terminal and follow the instructions:
 
 ```bash
 php please factory:run
+```
+
+## Special Fieldtypes
+
+The above example works great for basic fieldtypes. But what about Bard, Replicator, Grid and Tables? I'm glad you asked. To fake content for these "Special Fieldtypes" you need to change the blueprint according to the examples below.
+
+### Table
+`rows` defines the number of rows you want to create.  
+`cells` defines the number of cells you want to create.  
+`faker` defines the faker formatter to use.
+
+```yaml
+title: Special Fieldtypes
+sections:
+  main:
+    display: Main
+    fields:
+      -
+        handle: table
+        field:
+          type: table
+          factory:
+            rows: 2
+            cells: 5
+            faker: word
 ```
