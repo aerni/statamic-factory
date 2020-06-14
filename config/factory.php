@@ -25,13 +25,13 @@ return [
     | and taxonomy terms.
     |
     | 'chars': The character count of the title will be in this range.
-    | 'lorem': Use real english words by setting this to 'false'.
+    | 'real_text': Use real english words by setting this to 'true'.
     |
     */
 
     'title' => [
         'chars' => [$min = 10, $max = 20],
-        'lorem' => false,
+        'real_text' => false,
     ],
 
 ];

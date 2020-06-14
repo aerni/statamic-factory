@@ -312,14 +312,14 @@ class Factory
      */
     protected function title(): string
     {
-        $lorem = $this->config['title']['lorem'];
+        $realText = $this->config['title']['real_text'];
         $minChars = $this->config['title']['chars'][0];
         $maxChars = $this->config['title']['chars'][1];
 
-        if ($lorem) {
-            return $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
+        if ($realText) {
+            return $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
         }
-
-        return $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
+        
+        return $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
     }
 }
