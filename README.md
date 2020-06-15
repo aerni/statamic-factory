@@ -1,5 +1,5 @@
 # Factory
-Factory provides an easy way to quickly whip up fake `collection entries` and `taxonomy terms` using [Faker](https://github.com/fzaninotto/Faker).
+Factory is a Statamic v3 addon that provides an easy way to quickly whip up fake `collection entries` and `taxonomy terms` using [Faker](https://github.com/fzaninotto/Faker).
 
 ## Installation
 Install the addon using Composer.
@@ -93,7 +93,7 @@ sections:
 Run the factory in your terminal and follow the instructions:
 
 ```bash
-php please factory:run
+php please factory
 ```
 
 ## Special Fieldtypes

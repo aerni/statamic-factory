@@ -20,7 +20,7 @@ class RunFactory extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:factory:run';
+    protected $signature = 'statamic:factory';
 
     /**
      * The console command description.
