@@ -2,7 +2,6 @@
 
 namespace Aerni\Factory;
 
-use Aerni\Factory\Utils;
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
@@ -125,12 +124,12 @@ class Factory
         $fakerFormatter = $item['field']['factory']['faker'];
 
         $table = [
-            $handle => []
+            $handle => [],
         ];
 
         for ($i = 0 ; $i < $rowCount; $i++) {
             array_push($table[$handle], [
-                'cells' => []
+                'cells' => [],
             ]);
         }
 
@@ -138,6 +137,7 @@ class Factory
             for ($i = 0 ; $i < $cellCount; $i++) {
                 array_push($item['cells'], $fakerFormatter);
             }
+
             return $item;
         }, $table[$handle]);
 
@@ -148,7 +148,7 @@ class Factory
      * Check if the passed item is a special field type.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function isSpecialFieldtype(array $item): bool
     {
