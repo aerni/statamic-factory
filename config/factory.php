@@ -26,13 +26,13 @@ return [
     | a 'title' field in the respective blueprint.
     |
     | 'chars': The character count of the title will be in this range.
-    | 'real_text': Use real english words by setting this to 'true'.
+    | 'real_text': Use real english words instead of Lorem Ipsum.
     |
     */
 
     'title' => [
-        'chars' => [$min = 10, $max = 20],
-        'real_text' => false,
+        'chars' => [$min = 20, $max = 30],
+        'real_text' => true,
     ],
 
 ];
