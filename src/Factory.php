@@ -120,19 +120,6 @@ class Factory
     }
 
     /**
-     * Only return items that include a "faker" key.
-     *
-     * @param SupportCollection $items
-     * @return SupportCollection
-     */
-    protected function filterItemsOld(SupportCollection $items): SupportCollection
-    {
-        return $items->filter(function ($value) {
-            return collect($value['field'])->has('factory');
-        });
-    }
-
-    /**
      * Filter the fields by supported fieldtypes.
      *
      * @param SupportCollection $fields
@@ -154,7 +141,10 @@ class Factory
             ->filter(function ($item) {
                 switch ($item['field']['type']) {
                     case 'grid':
-                        return count($item['field']['fields'] ?? []) > 0;
+                        if ($item['field']['fields']->isEmpty()) {
+                            return false;
+                        }
+                        return collect($item['field'])->has('factory');
 
                         break;
                     default:
