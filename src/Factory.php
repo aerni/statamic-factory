@@ -144,6 +144,7 @@ class Factory
                         if ($item['field']['fields']->isEmpty()) {
                             return false;
                         }
+
                         return collect($item['field'])->has('factory');
 
                         break;
