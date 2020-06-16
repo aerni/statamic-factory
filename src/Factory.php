@@ -2,10 +2,8 @@
 
 namespace Aerni\Factory;
 
-use Aerni\Factory\Mapper;
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
-use Statamic\Support\Str;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -13,6 +11,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Statamic\Support\Str;
 
 class Factory
 {
@@ -146,6 +145,7 @@ class Factory
                 switch ($item['field']['type']) {
                     case 'grid':
                         $item['field']['fields'] = $this->filterItems(collect($item['field']['fields'] ?? []));
+
                         break;
                 }
 
@@ -155,6 +155,7 @@ class Factory
                 switch ($item['field']['type']) {
                     case 'grid':
                         return count($item['field']['fields'] ?? []) > 0;
+
                         break;
                     default:
                         break;
@@ -352,10 +353,12 @@ class Factory
 
         if ($realText) {
             $title = $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
+
             return Str::removeRight($title, '.');
         }
         
         $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
+
         return Str::removeRight($title, '.');
     }
 }

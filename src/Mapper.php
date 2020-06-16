@@ -15,7 +15,6 @@ class Mapper
     public function mapItems(SupportCollection $items): SupportCollection
     {
         return $items->flatMap(function ($item) {
-            
             if ($this->isSpecialFieldtype($item)) {
                 return $this->handleSpecialFieldtype($item);
             }
@@ -23,7 +22,6 @@ class Mapper
             return [
                 $item['handle'] => $this->formatter($item),
             ];
-
         });
     }
 
@@ -60,7 +58,7 @@ class Mapper
 
         $fields = collect($item['field']['fields'])->flatMap(function ($item) {
             return [
-                $item['handle'] => $this->formatter($item)
+                $item['handle'] => $this->formatter($item),
             ];
         })->toArray();
 
