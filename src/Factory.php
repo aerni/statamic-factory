@@ -4,7 +4,6 @@ namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Str;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -12,6 +11,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Statamic\Support\Str;
 
 class Factory
 {
@@ -21,6 +21,13 @@ class Factory
      * @var Faker
      */
     protected $faker;
+
+    /**
+     * The mapper instance.
+     *
+     * @var Mapper
+     */
+    protected $mapper;
 
     /**
      * The config of the factory.
@@ -62,9 +69,11 @@ class Factory
      *
      * @return void
      */
-    public function __construct(Faker $faker)
+    public function __construct(Faker $faker, Mapper $mapper)
     {
         $this->faker = $faker;
+        $this->mapper = $mapper;
+
         $this->config = config('factory');
     }
 
@@ -98,70 +107,6 @@ class Factory
     }
 
     /**
-     * Handle special fieldtypes.
-     *
-     * @param array $item
-     * @return array
-     */
-    protected function handleSpecialFieldtypes(array $item): array
-    {
-        if ($item['field']['type'] === 'table') {
-            return $this->mapTable($item);
-        }
-    }
-
-    /**
-     * Map table fieldtype to the expected structure of its saved data.
-     *
-     * @param array $item
-     * @return array
-     */
-    protected function mapTable(array $item): array
-    {
-        $handle = $item['handle'];
-        $rowCount = $item['field']['factory']['rows'];
-        $cellCount = $item['field']['factory']['cells'];
-        $fakerFormatter = $item['field']['factory']['faker'];
-
-        $table = [
-            $handle => [],
-        ];
-
-        for ($i = 0 ; $i < $rowCount; $i++) {
-            array_push($table[$handle], [
-                'cells' => [],
-            ]);
-        }
-
-        $table[$handle] = array_map(function ($item) use ($cellCount, $fakerFormatter) {
-            for ($i = 0 ; $i < $cellCount; $i++) {
-                array_push($item['cells'], $fakerFormatter);
-            }
-
-            return $item;
-        }, $table[$handle]);
-
-        return $table;
-    }
-
-    /**
-     * Check if the passed item is a special field type.
-     *
-     * @param array $item
-     * @return bool
-     */
-    protected function isSpecialFieldtype(array $item): bool
-    {
-        $specialFieldtypes = ['table'];
-
-        if (in_array($item['field']['type'], $specialFieldtypes)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Get the fakeable items from the blueprint.
      *
      * @return array
@@ -169,41 +114,47 @@ class Factory
     protected function fakeableItems(): array
     {
         $filtered = $this->filterItems($this->blueprintItems());
-        $mapped = $this->mapItems($filtered);
+        $mapped = $this->mapper->mapItems($filtered);
+        // dd($mapped);
 
         return $mapped->toArray();
     }
 
     /**
-     * Only return items that include a "faker" key.
+     * Filter the fields by supported fieldtypes.
      *
-     * @param SupportCollection $items
+     * @param SupportCollection $fields
      * @return SupportCollection
      */
-    protected function filterItems(SupportCollection $items): SupportCollection
+    protected function filterItems(SupportCollection $fields): SupportCollection
     {
-        return $items->filter(function ($value) {
-            return collect($value['field'])->has('factory');
-        });
-    }
+        return $fields
+            ->map(function ($item) {
+                switch ($item['field']['type']) {
+                    case 'grid':
+                        $item['field']['fields'] = $this->filterItems(collect($item['field']['fields'] ?? []));
 
-    /**
-     * Map the items.
-     *
-     * @param SupportCollection $items
-     * @return SupportCollection
-     */
-    protected function mapItems(SupportCollection $items): SupportCollection
-    {
-        return $items->flatMap(function ($item) {
-            if ($this->isSpecialFieldtype($item)) {
-                return $this->handleSpecialFieldtypes($item);
-            } else {
-                return [
-                    $item['handle'] => $item['field']['factory'],
-                ];
-            }
-        });
+                        break;
+                }
+
+                return $item;
+            })
+            ->filter(function ($item) {
+                switch ($item['field']['type']) {
+                    case 'grid':
+                        if ($item['field']['fields']->isEmpty()) {
+                            return false;
+                        }
+
+                        return collect($item['field'])->has('factory');
+
+                        break;
+                    default:
+                        break;
+                }
+
+                return collect($item['field'])->has('factory');
+            });
     }
 
     /**
@@ -393,9 +344,13 @@ class Factory
         $maxChars = $this->config['title']['chars'][1];
 
         if ($realText) {
-            return $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
+            $title = $this->faker->realText($this->faker->numberBetween($minChars, $maxChars));
+
+            return Str::removeRight($title, '.');
         }
         
-        return $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
+        $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
+
+        return Str::removeRight($title, '.');
     }
 }
