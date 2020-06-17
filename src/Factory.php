@@ -115,6 +115,7 @@ class Factory
     {
         $filtered = $this->filterItems($this->blueprintItems());
         $mapped = $this->mapper->mapItems($filtered);
+        // dd($mapped);
 
         return $mapped->toArray();
     }
@@ -125,7 +126,7 @@ class Factory
      * @param SupportCollection $fields
      * @return SupportCollection
      */
-    private function filterItems(SupportCollection $fields): SupportCollection
+    protected function filterItems(SupportCollection $fields): SupportCollection
     {
         return $fields
             ->map(function ($item) {

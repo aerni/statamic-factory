@@ -19,9 +19,8 @@ class Mapper
                 return $this->handleSpecialFieldtype($item);
             }
 
-            return [
-                $item['handle'] => $this->formatter($item),
-            ];
+            return $this->mapSimple($item);
+
         });
     }
 
@@ -43,7 +42,7 @@ class Mapper
     }
 
     /**
-     * Map grid fieldtype to the expected structure of its saved data.
+     * Map grid fieldtype to its expected data structure.
      *
      * @param array $item
      * @return array
@@ -52,14 +51,12 @@ class Mapper
     {
         $handle = $item['handle'];
 
-        $minRows = $item['field']['factory']['min_rows'] ?? $item['field']['min_rows'];
-        $maxRows = $item['field']['factory']['max_rows'] ?? $item['field']['max_rows'];
+        $minRows = $item['field']['factory']['min_rows'];
+        $maxRows = $item['field']['factory']['max_rows'];
         $rowCount = random_int($minRows, $maxRows);
 
         $fields = collect($item['field']['fields'])->flatMap(function ($item) {
-            return [
-                $item['handle'] => $this->formatter($item),
-            ];
+            return $this->mapItems(collect([$item]));
         })->toArray();
 
         $grid = [
@@ -67,18 +64,14 @@ class Mapper
         ];
 
         for ($i = 0 ; $i < $rowCount; $i++) {
-            array_push($grid[$handle], []);
+            array_push($grid[$handle], $fields);
         }
-
-        $grid[$handle] = array_map(function () use ($fields) {
-            return $fields;
-        }, $grid[$handle]);
 
         return $grid;
     }
 
     /**
-     * Map table fieldtype to the expected structure of its saved data.
+     * Map table fieldtype to its expected data structure.
      *
      * @param array $item
      * @return array
@@ -90,7 +83,7 @@ class Mapper
         $rowCount = $item['field']['factory']['rows'];
         $cellCount = $item['field']['factory']['cells'];
 
-        $fakerFormatter = $this->formatter($item);
+        $formatter = $this->formatter($item);
 
         $table = [
             $handle => [],
@@ -102,15 +95,28 @@ class Mapper
             ]);
         }
 
-        $table[$handle] = array_map(function ($item) use ($cellCount, $fakerFormatter) {
+        $table[$handle] = array_map(function ($item) use ($cellCount, $formatter) {
             for ($i = 0 ; $i < $cellCount; $i++) {
-                array_push($item['cells'], $fakerFormatter);
+                array_push($item['cells'], $formatter);
             }
 
             return $item;
         }, $table[$handle]);
 
         return $table;
+    }
+
+    /**
+     * Map a simple fieldtype to its expected data structure.
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function mapSimple(array $item): array
+    {
+        return [
+            $item['handle'] => $this->formatter($item),
+        ];
     }
 
     /**
@@ -129,7 +135,7 @@ class Mapper
     }
 
     /**
-     * Check if the item is of a special field type.
+     * Check if the item is a fieldtype that needs special handling.
      *
      * @param array $item
      * @return bool
