@@ -20,7 +20,6 @@ class Mapper
             }
 
             return $this->mapSimple($item);
-
         });
     }
 
