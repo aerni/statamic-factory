@@ -79,8 +79,12 @@ class Mapper
     {
         $handle = $item['handle'];
 
-        $rowCount = $item['field']['factory']['rows'];
-        $cellCount = $item['field']['factory']['cells'];
+        $minRows = $item['field']['factory']['min_rows'];
+        $maxRows = $item['field']['factory']['max_rows'];
+        $minCells = $item['field']['factory']['min_cells'];
+        $maxCells = $item['field']['factory']['max_cells'];
+        $rowCount = random_int($minRows, $maxRows);
+        $cellCount = random_int($minCells, $maxCells);
 
         $formatter = $this->formatter($item);
 

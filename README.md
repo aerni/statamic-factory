@@ -131,8 +131,10 @@ sections:
 ```
 
 ### Table
-`rows` defines the number of rows you want to create.  
-`cells` defines the number of cells you want to create.  
+`min_rows` defines the minimum number of rows you want to create.  
+`max_rows` defines the maximum number of rows you want to create.  
+`min_cells` defines the minimum number of cells you want to create.  
+`max_cells` defines the maximum number of cells you want to create.  
 `formatter` defines the faker formatter to use.
 
 ```yaml
@@ -146,7 +148,9 @@ sections:
         field:
           type: table
           factory:
-            rows: 2
-            cells: 5
+            min_rows: 1
+            max_rows: 3
+            min_cells: 3
+            max_cells: 5
             formatter: word
 ```
