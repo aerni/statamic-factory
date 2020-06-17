@@ -43,13 +43,13 @@ return [
     | a 'title' field in the respective blueprint.
     |
     | 'chars': The character count of the title will be in this range.
-    | 'real_text': Use real english words by setting this to 'true'.
+    | 'real_text': Use real english words instead of Lorem Ipsum.
     |
     */
 
     'title' => [
-        'chars' => [$min = 10, $max = 20],
-        'real_text' => false,
+        'chars' => [$min = 20, $max = 30],
+        'real_text' => true,
     ],
 
 ];
@@ -59,7 +59,7 @@ return [
 
 ## Basic Usage
 
-Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
+Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter for simple fieldtypes or an array of options for advanced fieldtypes like a grid. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
 
 This is an example blueprint for a collection of people:
 ```yaml
@@ -100,13 +100,43 @@ php please factory
 
 The above example works great for basic fieldtypes. But what about Bard, Replicator, Grid and Tables? I'm glad you asked. To fake content for these "Special Fieldtypes" you need to change the blueprint according to the examples below.
 
+### Grid
+`min_rows` defines the minimum number of rows to create.  
+`max_rows` defines the maximum number of rows to create.  
+
+```yaml
+title: Table
+sections:
+  main:
+    display: Main
+    fields:
+      -
+        handle: grid
+        field:
+          type: grid
+          factory:
+            min_rows: 1
+            max_rows: 4
+          fields:
+            -
+              handle: first_name
+              field:
+                type: text
+                factory: firstName
+            -
+              handle: last_name
+              field:
+                type: text
+                factory: lastName
+```
+
 ### Table
 `rows` defines the number of rows you want to create.  
 `cells` defines the number of cells you want to create.  
-`faker` defines the faker formatter to use.
+`formatter` defines the faker formatter to use.
 
 ```yaml
-title: Special Fieldtypes
+title: Table
 sections:
   main:
     display: Main
@@ -118,5 +148,5 @@ sections:
           factory:
             rows: 2
             cells: 5
-            faker: word
+            formatter: word
 ```
