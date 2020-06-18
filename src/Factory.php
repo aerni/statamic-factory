@@ -98,44 +98,31 @@ class Factory
     }
 
     /**
-     * Get the items of the blueprint.
-     *
-     * @return SupportCollection
-     */
-    protected function blueprintItems(): SupportCollection
-    {
-        return Blueprint::find($this->blueprintHandle)->fields()->items();
-    }
-
-    /**
      * Get the fakeable items from the blueprint.
      *
      * @return array
      */
     protected function fakeableItems(): array
     {
-        $filtered = $this->filterItems($this->blueprintItems());
-        dd($filtered);
-        // $filtered = $this->filterItems($this->blueprintItems());
-        // dd($filtered);
-        $mapped = $this->mapper->mapItems($filtered);
-        dd($mapped);
+        $blueprintItems = Blueprint::find($this->blueprintHandle)->fields()->items();
 
-        return $mapped->toArray();
+        $filtered = $this->filterItems($blueprintItems);
+        $mapped = $this->mapper->mapItems($filtered);
+
+        return $mapped;
     }
 
     /**
      * Filter the blueprint items.
      *
      * @param SupportCollection $items
-     * @return SupportCollection
+     * @return array
      */
-    protected function filterItems(SupportCollection $items): SupportCollection
+    protected function filterItems(SupportCollection $items): array
     {
         return $items->map(function ($item) {
 
-            if ($this->isReplicator($item)) {
-                
+            if ($this->isBardOrReplicator($item)) {       
                 $item['field']['sets'] = $this->sets($item)
                     ->map(function ($set) {
                         $set['fields'] = $this->filterItems($this->fields($set));
@@ -143,8 +130,7 @@ class Factory
                     })
                     ->filter(function ($set) {
                         return $this->hasFactory($set) && $this->hasFields($set);
-                    });
-
+                    })->toArray();
             }
 
             if ($this->isGrid($item)) {
@@ -155,7 +141,7 @@ class Factory
 
         })->filter(function ($item) {
 
-            if ($this->isReplicator($item)) {
+            if ($this->isBardOrReplicator($item)) {
                 return $this->hasSets($item);
             }
 
@@ -165,59 +151,7 @@ class Factory
 
             return $this->hasFactory($item);
 
-        });
-
-
-
-        // dd($fields);
-        return $items
-            ->map(function ($item) {
-                switch ($item['field']['type']) {
-                    case 'grid':
-                        $item['field']['fields'] = $this->filterItems(collect($item['field']['fields'] ?? []));
-                        break;
-                    // case 'replicator':
-                    // case 'bard':
-                    //     $item['field']['sets'] = collect($item['field']['sets'] ?? [])
-                    //         ->map(function ($set) {
-                    //             $set['fields'] = $this->filterItems(collect($set['fields']));
-                    //             return $set;
-                    //         })
-                    //         ->filter(function ($set) {
-                    //             return count($set['fields']) > 0;
-                    //         });
-                    //     break;
-                }
-
-                return $item;
-            })
-            ->filter(function ($item) {
-                // dd($item);
-                switch ($item['field']['type']) {
-                    case 'grid':
-                        if ($item['field']['fields']->isEmpty()) {
-                            return false;
-                        }
-
-                        return collect($item['field'])->has('factory');
-
-                        break;
-                    // case 'replicator':
-                    //     if ($item['field']['sets']->isEmpty()) {
-                    //         return false;
-                    //     }
-
-                    //     return $item['field']['sets']->flatMap(function ($item) {
-                    //         return collect($item)->has('factory');
-                    //     });
-
-                    //     break;
-                    default:
-                        break;
-                }
-
-                return collect($item['field'])->has('factory');
-            });
+        })->toArray();
     }
 
     /**
@@ -246,104 +180,6 @@ class Factory
     protected function sets(array $item): SupportCollection
     {
         return collect($item['field']['sets'] ?? []);
-    }
-
-    /**
-     * Check if an item is of fieldtype grid.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    protected function isGrid(array $item): bool
-    {
-        if ($item['field']['type'] === 'grid') {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if an item is of fieldtype replicator.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    protected function isReplicator(array $item): bool
-    {
-        if ($item['field']['type'] === 'replicator') {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if an item has factory key.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    protected function hasFactory(array $item): bool
-    {
-        if (array_key_exists('field', $item)) {
-            return collect($item['field'])->has('factory');
-        }
-        
-        if (array_key_exists('factory', $item)) {
-            return collect($item)->has('factory');
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if an item has fields.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    protected function hasFields(array $item): bool
-    {
-        if (array_key_exists('field', $item)) {
-            return $item['field']['fields']->isNotEmpty();
-        }
-
-        if (array_key_exists('fields', $item)) {
-            return $item['fields']->isNotEmpty();
-        }
-        
-        return false;
-    }
-
-    /**
-     * Check if an item has fields.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    // protected function hasFields(array $item): bool
-    // {
-    //     if ($item['field']['fields']->isEmpty()) {
-    //         return false;
-    //     }
-
-    //     return true;
-    // }
-
-    /**
-     * Check if an item has sets.
-     *
-     * @param array $item
-     * @return boolean
-     */
-    protected function hasSets(array $item): bool
-    {
-        if ($item['field']['sets']->isEmpty()) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -471,8 +307,11 @@ class Factory
      */
     protected function fakeData(): array
     {
-        return Utils::array_map_recursive($this->fakeableItems(), function ($fakerFormatter) {
-            return $this->fakeItem($fakerFormatter);
+        return Utils::array_map_recursive($this->fakeableItems(), function ($value, $key) {
+            if ($this->isFakerFormatter($value, $key)) {
+                return $this->fakeItem($value);
+            }
+            return $value;
         });
     }
 
@@ -541,5 +380,116 @@ class Factory
         $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
 
         return Str::removeRight($title, '.');
+    }
+
+    /**
+     * Check if an item is of fieldtype bard or replicator.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function isBardOrReplicator(array $item): bool
+    {
+        if ($item['field']['type'] === 'bard') {
+            return true;
+        }
+
+        if ($item['field']['type'] === 'replicator') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if an item is of fieldtype grid.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function isGrid(array $item): bool
+    {
+        if ($item['field']['type'] === 'grid') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if an item has factory key.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function hasFactory(array $item): bool
+    {
+        if (array_key_exists('field', $item)) {
+            return collect($item['field'])->has('factory');
+        }
+        
+        if (array_key_exists('factory', $item)) {
+            return collect($item)->has('factory');
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if an item has fields.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function hasFields(array $item): bool
+    {
+        if (array_key_exists('field', $item)) {
+            return collect($item['field']['fields'])->isNotEmpty();
+        }
+
+        if (array_key_exists('fields', $item)) {
+            return collect($item['fields'])->isNotEmpty();
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if an item has sets.
+     *
+     * @param array $item
+     * @return boolean
+     */
+    protected function hasSets(array $item): bool
+    {
+        if (collect($item['field']['sets'])->isEmpty()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the passed value is a faker formatter.
+     *
+     * @param mixed $value
+     * @param string $key
+     * @return boolean
+     */
+    protected function isFakerFormatter($value, string $key): bool
+    {
+        if (is_array($value)) {
+            return false;
+        }
+
+        if ($key === 'type') {
+            return false;
+        }
+
+        if ($key === 'enabled') {
+            return false;
+        }
+
+        return true;
     }
 }

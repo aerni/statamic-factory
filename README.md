@@ -100,6 +100,40 @@ php please factory
 
 The above example works great for basic fieldtypes. But what about Bard, Replicator, Grid and Tables? I'm glad you asked. To fake content for these "Special Fieldtypes" you need to change the blueprint according to the examples below.
 
+### Bard & Replicator
+`min_sets` defines the minimum number of sets to create.  
+`max_sets` defines the maximum number of sets to create.  
+
+```yaml
+title: 'Bard & Replicator'
+sections:
+  main:
+    display: Main
+    fields:
+      -
+        handle: replicator
+        field:
+          type: replicator
+          sets:
+            text:
+              display: Text
+              factory:
+                min_sets: 1
+                max_sets: 3
+              fields:
+                -
+                  handle: text
+                  field:
+                    type: text
+                    factory: word
+                -
+                  handle: textarea
+                  field:
+                    type: textarea
+                    factory: 'paragraph(3, true)'
+
+```
+
 ### Grid
 `min_rows` defines the minimum number of rows to create.  
 `max_rows` defines the maximum number of rows to create.  

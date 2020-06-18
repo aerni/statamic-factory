@@ -10,17 +10,17 @@ class Mapper
      * Map the items.
      *
      * @param SupportCollection $items
-     * @return SupportCollection
+     * @return array
      */
-    public function mapItems(SupportCollection $items): SupportCollection
+    public function mapItems(array $items): array
     {
-        return $items->flatMap(function ($item) {
+        return collect($items)->flatMap(function ($item) {
             if ($this->isSpecialFieldtype($item)) {
                 return $this->handleSpecialFieldtype($item);
             }
 
             return $this->mapSimple($item);
-        });
+        })->toArray();
     }
 
     /**
@@ -35,9 +35,61 @@ class Mapper
             return $this->mapGrid($item);
         }
 
+        if ($item['field']['type'] === 'bard') {
+            return $this->mapBardAndReplicator($item);
+        }
+
+        if ($item['field']['type'] === 'replicator') {
+            return $this->mapBardAndReplicator($item);
+        }
+
         if ($item['field']['type'] === 'table') {
             return $this->mapTable($item);
         }
+    }
+
+    /**
+     * Map bard and replicator fieldtype to its expected data structure.
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function mapBardAndReplicator(array $item): array
+    {
+        $handle = $item['handle'];
+        $sets = $item['field']['sets'];
+
+        $setCount = collect($sets)->map(function ($item, $key) {
+            $minSets = $item['factory']['min_sets'];
+            $maxSets = $item['factory']['max_sets'];
+
+            return random_int($minSets, $maxSets);
+        })->toArray();
+
+        $sets = collect($item['field']['sets'])->map(function ($set, $key) {
+            $fields = collect($set['fields'])->flatMap(function ($item) {
+                return $this->mapItems([$item]);
+            });
+
+            return $fields->merge([
+                'type' => $key,
+                'enabled' => true,
+            ]);
+        })->toArray();
+
+        $items = collect($sets)->flatMap(function ($set, $key) use ($setCount, $sets) {
+            $items = [];
+
+            for ($i = 0 ; $i < $setCount[$key]; $i++) {
+                array_push($items, $sets[$key]);
+            }
+
+            return $items;
+        })->toArray();
+
+        return [
+            $handle => $items
+        ];
     }
 
     /**
@@ -55,7 +107,7 @@ class Mapper
         $rowCount = random_int($minRows, $maxRows);
 
         $fields = collect($item['field']['fields'])->flatMap(function ($item) {
-            return $this->mapItems(collect([$item]));
+            return $this->mapItems([$item]);
         })->toArray();
 
         $grid = [
@@ -145,7 +197,7 @@ class Mapper
      */
     protected function isSpecialFieldtype(array $item): bool
     {
-        $specialFieldtypes = ['grid', 'table'];
+        $specialFieldtypes = ['bard', 'grid', 'replicator', 'table'];
 
         if (in_array($item['field']['type'], $specialFieldtypes)) {
             return true;
