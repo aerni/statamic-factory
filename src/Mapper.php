@@ -88,7 +88,7 @@ class Mapper
         })->toArray();
 
         return [
-            $handle => $items
+            $handle => $items,
         ];
     }
 

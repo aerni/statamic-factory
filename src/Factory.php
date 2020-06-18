@@ -9,10 +9,10 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 use Statamic\Support\Str;
-use Statamic\Facades\Site;
 
 class Factory
 {
@@ -121,11 +121,11 @@ class Factory
     protected function filterItems(SupportCollection $items): array
     {
         return $items->map(function ($item) {
-
-            if ($this->isBardOrReplicator($item)) {       
+            if ($this->isBardOrReplicator($item)) {
                 $item['field']['sets'] = $this->sets($item)
                     ->map(function ($set) {
                         $set['fields'] = $this->filterItems($this->fields($set));
+
                         return $set;
                     })
                     ->filter(function ($set) {
@@ -138,9 +138,7 @@ class Factory
             }
 
             return $item;
-
         })->filter(function ($item) {
-
             if ($this->isBardOrReplicator($item)) {
                 return $this->hasSets($item);
             }
@@ -150,7 +148,6 @@ class Factory
             }
 
             return $this->hasFactory($item);
-
         })->toArray();
     }
 
@@ -311,6 +308,7 @@ class Factory
             if ($this->isFakerFormatter($value, $key)) {
                 return $this->fakeItem($value);
             }
+
             return $value;
         });
     }
@@ -386,7 +384,7 @@ class Factory
      * Check if an item is of fieldtype bard or replicator.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function isBardOrReplicator(array $item): bool
     {
@@ -405,7 +403,7 @@ class Factory
      * Check if an item is of fieldtype grid.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function isGrid(array $item): bool
     {
@@ -420,7 +418,7 @@ class Factory
      * Check if an item has factory key.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function hasFactory(array $item): bool
     {
@@ -439,7 +437,7 @@ class Factory
      * Check if an item has fields.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function hasFields(array $item): bool
     {
@@ -458,7 +456,7 @@ class Factory
      * Check if an item has sets.
      *
      * @param array $item
-     * @return boolean
+     * @return bool
      */
     protected function hasSets(array $item): bool
     {
@@ -474,7 +472,7 @@ class Factory
      *
      * @param mixed $value
      * @param string $key
-     * @return boolean
+     * @return bool
      */
     protected function isFakerFormatter($value, string $key): bool
     {
