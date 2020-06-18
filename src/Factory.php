@@ -12,6 +12,7 @@ use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 use Statamic\Support\Str;
+use Statamic\Facades\Site;
 
 class Factory
 {
@@ -227,7 +228,7 @@ class Factory
             Entry::make()
                 ->collection($this->contentHandle)
                 ->blueprint($this->blueprintHandle)
-                ->locale(key(config('statamic.sites.sites')))
+                ->locale(Site::default()->handle())
                 ->published($this->config['published'])
                 ->slug(Str::slug($fakeData['title']))
                 ->data($fakeData)
