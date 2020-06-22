@@ -5,7 +5,6 @@
         "statamic",
         "factory"
     ],
-    "type": "statamic-addon",
     "homepage": "https://github.com/aerni/statamic-factory",
     "license": "MIT",
     "authors": [
