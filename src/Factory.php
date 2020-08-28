@@ -3,7 +3,7 @@
 namespace Aerni\Factory;
 
 use Faker\Generator as Faker;
-use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Collection;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -115,10 +115,10 @@ class Factory
     /**
      * Filter the blueprint items.
      *
-     * @param SupportCollection $items
+     * @param Collection $items
      * @return array
      */
-    protected function filterItems(SupportCollection $items): array
+    protected function filterItems(Collection $items): array
     {
         return $items->map(function ($item) {
             if ($this->isBardOrReplicator($item)) {
@@ -155,14 +155,14 @@ class Factory
      * Get the fields or an empty array.
      *
      * @param array $item
-     * @return SupportCollection
+     * @return Collection
      */
-    protected function fields(array $item): SupportCollection
+    protected function fields(array $item): Collection
     {
         if (array_key_exists('field', $item)) {
             return collect($item['field']['fields'] ?? []);
         }
-        
+
         if (array_key_exists('fields', $item)) {
             return collect($item['fields'] ?? []);
         }
@@ -172,9 +172,9 @@ class Factory
      * Collect the sets from an item.
      *
      * @param array $item
-     * @return SupportCollection
+     * @return Collection
      */
-    protected function sets(array $item): SupportCollection
+    protected function sets(array $item): Collection
     {
         return collect($item['field']['sets'] ?? []);
     }
@@ -269,7 +269,7 @@ class Factory
     protected function makeGlobal(): void
     {
         $fakeData = $this->fakeData();
-        
+
         dd(GlobalSet::find($this->contentHandle)->fileData());
     }
 
@@ -351,7 +351,7 @@ class Factory
             // Pass each array value as argument to the Faker formatter.
             return call_user_func_array([$this->faker, $method], $argumentsArray);
         }
-        
+
         /**
          * This handles simple Faker formatters.
          */
@@ -374,7 +374,7 @@ class Factory
 
             return Str::removeRight($title, '.');
         }
-        
+
         $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
 
         return Str::removeRight($title, '.');
@@ -425,7 +425,7 @@ class Factory
         if (array_key_exists('field', $item)) {
             return collect($item['field'])->has('factory');
         }
-        
+
         if (array_key_exists('factory', $item)) {
             return collect($item)->has('factory');
         }
@@ -448,7 +448,7 @@ class Factory
         if (array_key_exists('fields', $item)) {
             return collect($item['fields'])->isNotEmpty();
         }
-        
+
         return false;
     }
 

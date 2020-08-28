@@ -2,14 +2,14 @@
 
 namespace Aerni\Factory;
 
-use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Collection;
 
 class Mapper
 {
     /**
      * Map the items.
      *
-     * @param SupportCollection $items
+     * @param Collection $items
      * @return array
      */
     public function mapItems(array $items): array
