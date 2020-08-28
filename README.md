@@ -1,5 +1,8 @@
-# Factory
-Factory is a Statamic v3 addon that provides an easy way to quickly whip up fake `Collection Entries` and `Taxonomy Terms` using [Faker](https://github.com/fzaninotto/Faker).
+# Factory 
+
+![Statamic](https://flat.badgen.net/badge/Statamic/3.0+/FF269E)
+
+This addon provides an easy way to quickly whip up fake `Collection Entries` and `Taxonomy Terms` using [Faker](https://github.com/fzaninotto/Faker).
 
 ## Installation
 Install the addon using Composer.
