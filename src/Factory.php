@@ -104,12 +104,22 @@ class Factory
      */
     protected function fakeableItems(): array
     {
-        $blueprintItems = Blueprint::find($this->blueprintHandle)->fields()->items();
-
+        $blueprintItems = $this->blueprint()->fields()->items();
         $filtered = $this->filterItems($blueprintItems);
         $mapped = $this->mapper->mapItems($filtered);
 
         return $mapped;
+    }
+
+    protected function blueprint(): \Statamic\Fields\Blueprint
+    {
+        if ($this->contentType === 'Collection Entry') {
+            return Blueprint::find("collections/{$this->contentHandle}/{$this->blueprintHandle}");
+        }
+
+        if ($this->contentType === 'Taxonomy Term') {
+            return Blueprint::find("taxonomies/{$this->contentHandle}/{$this->blueprintHandle}");
+        }
     }
 
     /**
@@ -190,7 +200,7 @@ class Factory
             $this->makeAsset($this->amount);
         }
 
-        if ($this->contentType === 'Collection') {
+        if ($this->contentType === 'Collection Entry') {
             $this->makeEntry($this->amount);
         }
 
@@ -198,7 +208,7 @@ class Factory
             $this->makeGlobal();
         }
 
-        if ($this->contentType === 'Taxonomy') {
+        if ($this->contentType === 'Taxonomy Term') {
             $this->makeTerm($this->amount);
         }
     }
