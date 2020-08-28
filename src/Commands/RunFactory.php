@@ -3,14 +3,14 @@
 namespace Aerni\Factory\Commands;
 
 use Aerni\Factory\Factory;
-use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-use Statamic\Facades\Blueprint;
-use Statamic\Facades\GlobalSet;
-use Statamic\Facades\Collection;
+use Illuminate\Support\Facades\Validator;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\AssetContainer;
-use Illuminate\Support\Facades\Validator;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\Collection;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Taxonomy;
 
 class RunFactory extends Command
 {
