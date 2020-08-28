@@ -3,13 +3,14 @@
 namespace Aerni\Factory\Commands;
 
 use Aerni\Factory\Factory;
+use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Validator;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Collection;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\AssetContainer;
-use Statamic\Facades\Collection;
-use Statamic\Facades\GlobalSet;
-use Statamic\Facades\Taxonomy;
+use Illuminate\Support\Facades\Validator;
 
 class RunFactory extends Command
 {
@@ -57,7 +58,7 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Collection', 'Taxonomy']
+            ['Collection Entry', 'Taxonomy Term']
         );
 
         // if ($contentType === 'Asset' && $this->hasAssetContainers()) {
@@ -69,10 +70,10 @@ class RunFactory extends Command
         //         ['required', 'numeric', 'min:1']
         //     );
         // }
-        
-        if ($contentType === 'Collection' && $this->hasCollections()) {
+
+        if ($contentType === 'Collection Entry') {
             $contentHandle = $this->choice('Choose a collection', $this->collections());
-            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->collectionBlueprints($contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->blueprints("collections/$contentHandle"));
             $amount = $this->askValid(
                 'How many entries do you want to create?',
                 'amount',
@@ -86,16 +87,16 @@ class RunFactory extends Command
         //     $amount = 1;
         // }
 
-        if ($contentType === 'Taxonomy' && $this->hasTaxonomies()) {
+        if ($contentType === 'Taxonomy Term') {
             $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
-            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->taxonomyBlueprints($contentHandle));
+            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->blueprints("taxonomies/$contentHandle"));
             $amount = $this->askValid(
                 'How many terms do you want to create?',
                 'amount',
                 ['required', 'numeric', 'min:1']
             );
         }
-        
+
         $this->runFactory($contentType, $contentHandle, $blueprintHandle, $amount);
     }
 
@@ -112,7 +113,7 @@ class RunFactory extends Command
     {
         try {
             $this->factory->run($contentType, $contentHandle, $blueprintHandle, $amount);
-            $this->info('🎉 The factory was successfull!');
+            $this->info('The factory was successfull!');
         } catch (\Exception $exception) {
             $this->error($exception->getMessage());
         }
@@ -137,7 +138,13 @@ class RunFactory extends Command
      */
     protected function collections(): array
     {
-        return Collection::handles()->toArray();
+        $collections = Collection::handles()->all();
+
+        if (empty($collections)) {
+            $this->error('You have no collections. Create at least one collection to use the factory.');
+        }
+
+        return $collections;
     }
 
     /**
@@ -159,7 +166,13 @@ class RunFactory extends Command
      */
     protected function taxonomies(): array
     {
-        return Taxonomy::handles()->toArray();
+        $taxonomies = Taxonomy::handles()->all();
+
+        if (empty($taxonomies)) {
+            $this->error('You have no taxonomies. Create at least one taxonomy to use the factory.');
+        }
+
+        return $taxonomies;
     }
 
     /**
@@ -173,19 +186,19 @@ class RunFactory extends Command
     }
 
     /**
-     * Get the blueprint handles of a collection.
+     * Get blueprint handles
      *
      * @return array
      */
-    protected function collectionBlueprints(string $contentHandle): array
+    protected function blueprints(string $path): array
     {
-        return Collection::find($contentHandle)
-            ->entryBlueprints()
-            ->map(function ($blueprint) {
-                return $blueprint->handle();
-            })
-            ->toArray();
-        ;
+        $blueprints = Blueprint::in($path)->keys()->all();
+
+        if (empty($blueprints)) {
+            $this->error("No blueprint found in $path");
+        }
+
+        return $blueprints;
     }
 
     /**
@@ -196,22 +209,6 @@ class RunFactory extends Command
     protected function globalBlueprint(string $contentHandle): string
     {
         return GlobalSet::find($contentHandle)->blueprint();
-    }
-
-    /**
-     * Get the blueprint handles of a taxonomy.
-     *
-     * @return array
-     */
-    protected function taxonomyBlueprints(string $contentHandle): array
-    {
-        return Taxonomy::find($contentHandle)
-            ->termBlueprints()
-            ->map(function ($blueprint) {
-                return $blueprint->handle();
-            })
-            ->toArray();
-        ;
     }
 
     /**
@@ -231,22 +228,6 @@ class RunFactory extends Command
     }
 
     /**
-     * Check if there's any collections.
-     *
-     * @return bool
-     */
-    protected function hasCollections(): bool
-    {
-        if (empty($this->collections())) {
-            $this->error('You have no collections. Create at least one collection to use the factory.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Check if there's any global sets.
      *
      * @return bool
@@ -255,22 +236,6 @@ class RunFactory extends Command
     {
         if (empty($this->globals())) {
             $this->error('You have no globals. Create at least one global set to use the factory.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if there's any taxonomies.
-     *
-     * @return bool
-     */
-    protected function hasTaxonomies(): bool
-    {
-        if (empty($this->taxonomies())) {
-            $this->error('You have no taxonomies. Create at least one taxonomy to use the factory.');
 
             return false;
         }
