@@ -1,17 +1,17 @@
 # Factory
-Factory is a Statamic v3 addon that provides an easy way to quickly whip up fake `collection entries` and `taxonomy terms` using [Faker](https://github.com/fzaninotto/Faker).
+Factory is a Statamic v3 addon that provides an easy way to quickly whip up fake `Collection Entries` and `Taxonomy Terms` using [Faker](https://github.com/fzaninotto/Faker).
 
 ## Installation
 Install the addon using Composer.
 
 ```bash
-composer require aerni/statamic-factory
+composer require aerni/factory
 ```
 
 Publish the config of the package.
 
 ```bash
-php artisan vendor:publish --provider="Aerni\Factory\ServiceProvider"
+php please vendor:publish --tag=factory-config
 ```
 
 The following config will be published to `config/factory.php`.
@@ -59,7 +59,7 @@ return [
 
 ## Basic Usage
 
-Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter for simple fieldtypes or an array of options for advanced fieldtypes like a grid. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
+Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter for simple fieldtypes and an array of options for advanced fieldtypes like a grid. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
 
 This is an example blueprint for a collection of people:
 ```yaml
@@ -101,8 +101,8 @@ php please factory
 The above example works great for basic fieldtypes. But what about Bard, Replicator, Grid and Tables? I'm glad you asked. To fake content for these "Special Fieldtypes" you need to change the blueprint according to the examples below.
 
 ### Bard & Replicator
-`min_sets` defines the minimum number of sets to create.  
-`max_sets` defines the maximum number of sets to create.  
+`min_sets` defines the minimum number of sets to create.
+`max_sets` defines the maximum number of sets to create.
 
 ```yaml
 title: 'Bard & Replicator'
@@ -135,8 +135,8 @@ sections:
 ```
 
 ### Grid
-`min_rows` defines the minimum number of rows to create.  
-`max_rows` defines the maximum number of rows to create.  
+`min_rows` defines the minimum number of rows to create.
+`max_rows` defines the maximum number of rows to create.
 
 ```yaml
 title: Table
@@ -165,10 +165,10 @@ sections:
 ```
 
 ### Table
-`min_rows` defines the minimum number of rows you want to create.  
-`max_rows` defines the maximum number of rows you want to create.  
-`min_cells` defines the minimum number of cells you want to create.  
-`max_cells` defines the maximum number of cells you want to create.  
+`min_rows` defines the minimum number of rows you want to create.
+`max_rows` defines the maximum number of rows you want to create.
+`min_cells` defines the minimum number of cells you want to create.
+`max_cells` defines the maximum number of cells you want to create.
 `formatter` defines the faker formatter to use.
 
 ```yaml
