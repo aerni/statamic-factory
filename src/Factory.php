@@ -120,6 +120,10 @@ class Factory
         if ($this->contentType === 'Taxonomy Term') {
             return Blueprint::find("taxonomies/{$this->contentHandle}/{$this->blueprintHandle}");
         }
+
+        if ($this->contentType === 'Global') {
+            return Blueprint::find("globals/{$this->contentHandle}");
+        }
     }
 
     /**
@@ -270,17 +274,16 @@ class Factory
     }
 
     /**
-     * TODO: Figure out how to save data to a Global Set.
-     *
      * Fill the global set with fake data.
      *
      * @return void
      */
     protected function makeGlobal(): void
     {
-        $fakeData = $this->fakeData();
-
-        dd(GlobalSet::find($this->contentHandle)->fileData());
+        GlobalSet::findByHandle($this->contentHandle)
+            ->inDefaultSite()
+            ->data($this->fakeData())
+            ->save();
     }
 
     /**

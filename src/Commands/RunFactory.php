@@ -58,7 +58,7 @@ class RunFactory extends Command
     {
         $contentType = $this->choice(
             'Choose the type of content you want to create',
-            ['Collection Entry', 'Taxonomy Term']
+            ['Collection Entry', 'Taxonomy Term', 'Global']
         );
 
         // if ($contentType === 'Asset' && $this->hasAssetContainers()) {
@@ -81,11 +81,11 @@ class RunFactory extends Command
             );
         }
 
-        // if ($contentType === 'Global' && $this->hasGlobals()) {
-        //     $contentHandle = $this->choice('Choose a global set', $this->globals());
-        //     $blueprintHandle = $this->globalBlueprint($contentHandle);
-        //     $amount = 1;
-        // }
+        if ($contentType === 'Global') {
+            $contentHandle = $this->choice('Choose a global set', $this->globals());
+            $blueprintHandle = collect($this->blueprints('globals'))->search($contentHandle);
+            $amount = 1;
+        }
 
         if ($contentType === 'Taxonomy Term') {
             $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
@@ -124,12 +124,12 @@ class RunFactory extends Command
      *
      * @return array
      */
-    protected function assetContainers(): array
-    {
-        return AssetContainer::all()->map(function ($container) {
-            return $container->handle();
-        })->toArray();
-    }
+    // protected function assetContainers(): array
+    // {
+    //     return AssetContainer::all()->map(function ($container) {
+    //         return $container->handle();
+    //     })->toArray();
+    // }
 
     /**
      * Get the available collection handles.
@@ -154,9 +154,15 @@ class RunFactory extends Command
      */
     protected function globals(): array
     {
-        return GlobalSet::all()->map(function ($container) {
+        $globals = GlobalSet::all()->map(function ($container) {
             return $container->handle();
-        })->toArray();
+        })->all();
+
+        if (empty($globals)) {
+            $this->error('You have no globals. Create at least one global set to use the factory.');
+        }
+
+        return $globals;
     }
 
     /**
@@ -180,10 +186,10 @@ class RunFactory extends Command
      *
      * @return string
      */
-    protected function assetBlueprint(string $contentHandle): string
-    {
-        return AssetContainer::find($contentHandle)->blueprint();
-    }
+    // protected function assetBlueprint(string $contentHandle): string
+    // {
+    //     return AssetContainer::find($contentHandle)->blueprint();
+    // }
 
     /**
      * Get blueprint handles
@@ -202,46 +208,20 @@ class RunFactory extends Command
     }
 
     /**
-     * Get the blueprint handle of a global set.
-     *
-     * @return string
-     */
-    protected function globalBlueprint(string $contentHandle): string
-    {
-        return GlobalSet::find($contentHandle)->blueprint();
-    }
-
-    /**
      * Check if there's any asset containers.
      *
      * @return bool
      */
-    protected function hasAssetContainers(): bool
-    {
-        if (empty($this->assetContainers())) {
-            $this->error('You have no asset containers. Create at least one asset container to use the factory.');
+    // protected function hasAssetContainers(): bool
+    // {
+    //     if (empty($this->assetContainers())) {
+    //         $this->error('You have no asset containers. Create at least one asset container to use the factory.');
 
-            return false;
-        }
+    //         return false;
+    //     }
 
-        return true;
-    }
-
-    /**
-     * Check if there's any global sets.
-     *
-     * @return bool
-     */
-    protected function hasGlobals(): bool
-    {
-        if (empty($this->globals())) {
-            $this->error('You have no globals. Create at least one global set to use the factory.');
-
-            return false;
-        }
-
-        return true;
-    }
+    //     return true;
+    // }
 
     /**
      * Validate the answer of a question.
