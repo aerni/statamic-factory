@@ -61,7 +61,7 @@ return [
 
 ## Basic Usage
 
-Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter for simple fieldtypes and an array of options for advanced fieldtypes like a grid. Please consult the [Faker Documentation](https://github.com/fzaninotto/Faker) for available formatters.
+Before you go crazy whipping up fake goodies, you need to let the Factory know what fields you want it to create. You do so by defining a `factory` key on each field in your blueprint that you want to fake. The value of the key is a Faker formatter for simple fieldtypes and an array of options for advanced fieldtypes like a grid. Please consult the [Faker Documentation](https://github.com/FakerPHP/Faker) for available formatters.
 
 This is an example blueprint for a collection of people:
 ```yaml
