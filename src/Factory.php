@@ -2,17 +2,18 @@
 
 namespace Aerni\Factory;
 
-use Faker\Generator as Faker;
-use Illuminate\Support\Collection;
-use Statamic\Facades\Asset;
-use Statamic\Facades\AssetContainer;
-use Statamic\Facades\Blueprint;
-use Statamic\Facades\Entry;
-use Statamic\Facades\GlobalSet;
+use Statamic\Support\Str;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
-use Statamic\Support\Str;
+use Statamic\Facades\Asset;
+use Statamic\Facades\Entry;
+use Faker\Generator as Faker;
+use Stillat\Primitives\Parser;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\GlobalSet;
+use Illuminate\Support\Collection;
+use Statamic\Facades\AssetContainer;
 
 class Factory
 {
@@ -334,41 +335,13 @@ class Factory
      */
     protected function fakeItem(string $fakerFormatter)
     {
-        /**
-         * This handles Faker formatters with arguments.
-         */
-        if (Str::containsAll($fakerFormatter, ['(', ')'])) {
-            $method = Str::of($fakerFormatter)->before('(')->__toString();
-            $arguments = Str::between($fakerFormatter, '(', ')');
+        $parsedMethod = (new Parser())->parseMethod($fakerFormatter);
 
-            // Create an array of arguments and trim each value.
-            $argumentsArray = array_map('trim', explode(',', $arguments));
+        $method = $parsedMethod[0];
+        $arguments = $parsedMethod[1];
 
-            // Transform each array value to its correct type.
-            $argumentsArray = array_map(function ($item) {
-                if (is_numeric($item)) {
-                    return (int) $item;
-                }
-
-                if ($item === 'true') {
-                    return (bool) true;
-                }
-
-                if ($item === 'false') {
-                    return (bool) false;
-                }
-
-                return (string) $item;
-            }, $argumentsArray);
-
-            // Pass each array value as argument to the Faker formatter.
-            return call_user_func_array([$this->faker, $method], $argumentsArray);
-        }
-
-        /**
-         * This handles simple Faker formatters.
-         */
-        return $this->faker->$fakerFormatter();
+        // Pass each array value as argument to the Faker formatter.
+        return call_user_func_array([$this->faker, $method], $arguments);
     }
 
     /**
