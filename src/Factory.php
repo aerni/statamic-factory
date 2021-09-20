@@ -2,18 +2,19 @@
 
 namespace Aerni\Factory;
 
-use Faker\Generator as Faker;
-use Illuminate\Support\Collection;
-use Statamic\Facades\Asset;
-use Statamic\Facades\AssetContainer;
-use Statamic\Facades\Blueprint;
-use Statamic\Facades\Entry;
-use Statamic\Facades\GlobalSet;
+use Statamic\Support\Str;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
-use Statamic\Support\Str;
+use Statamic\Facades\Asset;
+use Statamic\Facades\Entry;
+use Faker\Generator as Faker;
 use Stillat\Primitives\Parser;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\GlobalSet;
+use Illuminate\Support\Collection;
+use Statamic\Facades\AssetContainer;
+use Stillat\Primitives\MethodRunner;
 
 class Factory
 {
@@ -30,6 +31,20 @@ class Factory
      * @var Mapper
      */
     protected $mapper;
+
+    /**
+     * The parser instance.
+     *
+     * @var Parser
+     */
+    protected $parser;
+
+    /**
+     * The method runner instance.
+     *
+     * @var MethodRunner
+     */
+    protected $runner;
 
     /**
      * The config of the factory.
@@ -71,10 +86,12 @@ class Factory
      *
      * @return void
      */
-    public function __construct(Faker $faker, Mapper $mapper)
+    public function __construct(Faker $faker, Mapper $mapper, Parser $parser, MethodRunner $runner)
     {
         $this->faker = $faker;
         $this->mapper = $mapper;
+        $this->parser = $parser;
+        $this->runner = $runner;
 
         $this->config = config('factory');
     }
@@ -335,13 +352,10 @@ class Factory
      */
     protected function fakeItem(string $fakerFormatter)
     {
-        $parsedMethod = (new Parser())->parseMethod($fakerFormatter);
-
-        $method = $parsedMethod[0];
-        $arguments = $parsedMethod[1];
-
-        // Pass each array value as argument to the Faker formatter.
-        return call_user_func_array([$this->faker, $method], $arguments);
+        return $this->runner->run(
+            $this->parser->parseMethods($fakerFormatter),
+            $this->faker
+        );
     }
 
     /**
