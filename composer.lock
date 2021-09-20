@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1219f2e12f5f6eb2d360dbc81624e80a",
+    "content-hash": "54de00f2c824f82ad127b0cacc6a4a26",
     "packages": [
         {
             "name": "ajthinking/archetype",
@@ -4052,19 +4052,20 @@
         },
         {
             "name": "stillat/primitives",
-            "version": "v1.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Stillat/primitives.git",
-                "reference": "dfef1062ee6c3efeabceb74a630cdfc497c99949"
+                "reference": "7a51d0e9523b0bd95ce66cb213ff44a835509567"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Stillat/primitives/zipball/dfef1062ee6c3efeabceb74a630cdfc497c99949",
-                "reference": "dfef1062ee6c3efeabceb74a630cdfc497c99949",
+                "url": "https://api.github.com/repos/Stillat/primitives/zipball/7a51d0e9523b0bd95ce66cb213ff44a835509567",
+                "reference": "7a51d0e9523b0bd95ce66cb213ff44a835509567",
                 "shasum": ""
             },
             "require": {
+                "illuminate/support": "*",
                 "nikic/php-parser": "^4.10.3"
             },
             "require-dev": {
@@ -4089,9 +4090,15 @@
             "description": "Parses strings of primitive values into a PHP array.",
             "support": {
                 "issues": "https://github.com/Stillat/primitives/issues",
-                "source": "https://github.com/Stillat/primitives/tree/v1.0"
+                "source": "https://github.com/Stillat/primitives/tree/v1.2.0"
             },
-            "time": "2021-09-18T01:12:07+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/JohnathonKoster",
+                    "type": "github"
+                }
+            ],
+            "time": "2021-09-18T14:11:17+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",
@@ -7343,16 +7350,16 @@
         },
         {
             "name": "filp/whoops",
-            "version": "2.14.1",
+            "version": "2.14.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/filp/whoops.git",
-                "reference": "15ead64e9828f0fc90932114429c4f7923570cb1"
+                "reference": "89584ce67dd32307f1063cc43846674f4679feda"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/filp/whoops/zipball/15ead64e9828f0fc90932114429c4f7923570cb1",
-                "reference": "15ead64e9828f0fc90932114429c4f7923570cb1",
+                "url": "https://api.github.com/repos/filp/whoops/zipball/89584ce67dd32307f1063cc43846674f4679feda",
+                "reference": "89584ce67dd32307f1063cc43846674f4679feda",
                 "shasum": ""
             },
             "require": {
@@ -7402,7 +7409,7 @@
             ],
             "support": {
                 "issues": "https://github.com/filp/whoops/issues",
-                "source": "https://github.com/filp/whoops/tree/2.14.1"
+                "source": "https://github.com/filp/whoops/tree/2.14.3"
             },
             "funding": [
                 {
@@ -7410,7 +7417,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-08-29T12:00:00+00:00"
+            "time": "2021-09-19T12:00:00+00:00"
         },
         {
             "name": "friendsofphp/php-cs-fixer",
@@ -7792,22 +7799,22 @@
         },
         {
             "name": "orchestra/testbench",
-            "version": "v6.21.0",
+            "version": "v6.21.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/testbench.git",
-                "reference": "9082c6e2b8abd5e8aacb7c2895f24c1b1b3f59f1"
+                "reference": "f61383c001a97f0a116b0c58f74385424aa9de33"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/testbench/zipball/9082c6e2b8abd5e8aacb7c2895f24c1b1b3f59f1",
-                "reference": "9082c6e2b8abd5e8aacb7c2895f24c1b1b3f59f1",
+                "url": "https://api.github.com/repos/orchestral/testbench/zipball/f61383c001a97f0a116b0c58f74385424aa9de33",
+                "reference": "f61383c001a97f0a116b0c58f74385424aa9de33",
                 "shasum": ""
             },
             "require": {
                 "laravel/framework": "^8.54",
                 "mockery/mockery": "^1.4.2",
-                "orchestra/testbench-core": "^6.25",
+                "orchestra/testbench-core": "^6.25.2",
                 "php": "^7.3 || ^8.0",
                 "phpunit/phpunit": "^8.4 || ^9.3.3",
                 "spatie/laravel-ray": "^1.18"
@@ -7841,7 +7848,7 @@
             ],
             "support": {
                 "issues": "https://github.com/orchestral/testbench/issues",
-                "source": "https://github.com/orchestral/testbench/tree/v6.21.0"
+                "source": "https://github.com/orchestral/testbench/tree/v6.21.1"
             },
             "funding": [
                 {
@@ -7853,20 +7860,20 @@
                     "type": "liberapay"
                 }
             ],
-            "time": "2021-09-08T08:33:50+00:00"
+            "time": "2021-09-18T09:37:03+00:00"
         },
         {
             "name": "orchestra/testbench-core",
-            "version": "v6.25.1",
+            "version": "v6.25.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/testbench-core.git",
-                "reference": "99fb87c96cc7876176217470f81b447e4deb41e8"
+                "reference": "03d8cce6e500a9c64da4cbaa776236c91b2572a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/99fb87c96cc7876176217470f81b447e4deb41e8",
-                "reference": "99fb87c96cc7876176217470f81b447e4deb41e8",
+                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/03d8cce6e500a9c64da4cbaa776236c91b2572a1",
+                "reference": "03d8cce6e500a9c64da4cbaa776236c91b2572a1",
                 "shasum": ""
             },
             "require": {
@@ -7943,7 +7950,7 @@
                     "type": "liberapay"
                 }
             ],
-            "time": "2021-09-10T17:36:06+00:00"
+            "time": "2021-09-18T01:47:58+00:00"
         },
         {
             "name": "phar-io/manifest",
