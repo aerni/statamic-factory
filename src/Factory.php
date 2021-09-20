@@ -2,19 +2,19 @@
 
 namespace Aerni\Factory;
 
-use Statamic\Support\Str;
+use Faker\Generator as Faker;
+use Illuminate\Support\Collection;
+use Statamic\Facades\Asset;
+use Statamic\Facades\AssetContainer;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\Entry;
+use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
-use Statamic\Facades\Asset;
-use Statamic\Facades\Entry;
-use Faker\Generator as Faker;
-use Stillat\Primitives\Parser;
-use Statamic\Facades\Blueprint;
-use Statamic\Facades\GlobalSet;
-use Illuminate\Support\Collection;
-use Statamic\Facades\AssetContainer;
+use Statamic\Support\Str;
 use Stillat\Primitives\MethodRunner;
+use Stillat\Primitives\Parser;
 
 class Factory
 {
