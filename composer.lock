@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54de00f2c824f82ad127b0cacc6a4a26",
+    "content-hash": "7dd45133d0f4430d15fe80d7385a2798",
     "packages": [
         {
             "name": "ajthinking/archetype",
@@ -2766,16 +2766,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.12.0",
+            "version": "v4.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "6608f01670c3cc5079e18c1dab1104e002579143"
+                "reference": "50953a2691a922aa1769461637869a0a2faa3f53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/6608f01670c3cc5079e18c1dab1104e002579143",
-                "reference": "6608f01670c3cc5079e18c1dab1104e002579143",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/50953a2691a922aa1769461637869a0a2faa3f53",
+                "reference": "50953a2691a922aa1769461637869a0a2faa3f53",
                 "shasum": ""
             },
             "require": {
@@ -2816,9 +2816,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.12.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.13.0"
             },
-            "time": "2021-07-21T10:44:31+00:00"
+            "time": "2021-09-20T12:20:58+00:00"
         },
         {
             "name": "opis/closure",
@@ -3894,16 +3894,16 @@
         },
         {
             "name": "statamic/cms",
-            "version": "v3.2.5",
+            "version": "v3.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/statamic/cms.git",
-                "reference": "06f2341731b331e39b121f6b13843d4975da342b"
+                "reference": "26a5bd83857435870d65b207ed3785b85afd6a01"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/statamic/cms/zipball/06f2341731b331e39b121f6b13843d4975da342b",
-                "reference": "06f2341731b331e39b121f6b13843d4975da342b",
+                "url": "https://api.github.com/repos/statamic/cms/zipball/26a5bd83857435870d65b207ed3785b85afd6a01",
+                "reference": "26a5bd83857435870d65b207ed3785b85afd6a01",
                 "shasum": ""
             },
             "require": {
@@ -3972,7 +3972,7 @@
             ],
             "support": {
                 "issues": "https://github.com/statamic/cms/issues",
-                "source": "https://github.com/statamic/cms/tree/v3.2.5"
+                "source": "https://github.com/statamic/cms/tree/v3.2.6"
             },
             "funding": [
                 {
@@ -3980,7 +3980,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-09-17T15:28:31+00:00"
+            "time": "2021-09-21T15:25:15+00:00"
         },
         {
             "name": "statamic/stringy",
@@ -4052,16 +4052,16 @@
         },
         {
             "name": "stillat/primitives",
-            "version": "v1.2.0",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Stillat/primitives.git",
-                "reference": "7a51d0e9523b0bd95ce66cb213ff44a835509567"
+                "reference": "2ab24e4bd55b6ddf85c752455bc1f5be83ee503f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Stillat/primitives/zipball/7a51d0e9523b0bd95ce66cb213ff44a835509567",
-                "reference": "7a51d0e9523b0bd95ce66cb213ff44a835509567",
+                "url": "https://api.github.com/repos/Stillat/primitives/zipball/2ab24e4bd55b6ddf85c752455bc1f5be83ee503f",
+                "reference": "2ab24e4bd55b6ddf85c752455bc1f5be83ee503f",
                 "shasum": ""
             },
             "require": {
@@ -4090,7 +4090,7 @@
             "description": "Parses strings of primitive values into a PHP array.",
             "support": {
                 "issues": "https://github.com/Stillat/primitives/issues",
-                "source": "https://github.com/Stillat/primitives/tree/v1.2.0"
+                "source": "https://github.com/Stillat/primitives/tree/v1.3.0"
             },
             "funding": [
                 {
@@ -4098,7 +4098,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-09-18T14:11:17+00:00"
+            "time": "2021-09-20T22:53:21+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",
@@ -7711,33 +7711,32 @@
         },
         {
             "name": "nunomaduro/collision",
-            "version": "v5.9.0",
+            "version": "v5.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nunomaduro/collision.git",
-                "reference": "63456f5c3e8c4bc52bd573e5c85674d64d84fd43"
+                "reference": "3004cfa49c022183395eabc6d0e5207dfe498d00"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/63456f5c3e8c4bc52bd573e5c85674d64d84fd43",
-                "reference": "63456f5c3e8c4bc52bd573e5c85674d64d84fd43",
+                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/3004cfa49c022183395eabc6d0e5207dfe498d00",
+                "reference": "3004cfa49c022183395eabc6d0e5207dfe498d00",
                 "shasum": ""
             },
             "require": {
                 "facade/ignition-contracts": "^1.0",
-                "filp/whoops": "^2.7.2",
+                "filp/whoops": "^2.14.3",
                 "php": "^7.3 || ^8.0",
                 "symfony/console": "^5.0"
             },
             "require-dev": {
                 "brianium/paratest": "^6.1",
                 "fideloper/proxy": "^4.4.1",
-                "friendsofphp/php-cs-fixer": "^3.0",
                 "fruitcake/laravel-cors": "^2.0.3",
-                "laravel/framework": "^8.0 || ^9.0",
+                "laravel/framework": "8.x-dev",
                 "nunomaduro/larastan": "^0.6.2",
                 "nunomaduro/mock-final-classes": "^1.0",
-                "orchestra/testbench": "^6.0 || ^7.0",
+                "orchestra/testbench": "^6.0",
                 "phpstan/phpstan": "^0.12.64",
                 "phpunit/phpunit": "^9.5.0"
             },
@@ -7795,7 +7794,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2021-08-26T15:32:09+00:00"
+            "time": "2021-09-20T15:06:32+00:00"
         },
         {
             "name": "orchestra/testbench",

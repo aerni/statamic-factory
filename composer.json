@@ -19,7 +19,7 @@
         "php": "^7.4 || ^8.0",
         "fakerphp/faker": "^1.15.0",
         "statamic/cms": "^3.0 || ^3.1 || ^3.2",
-        "stillat/primitives": "^1.2"
+        "stillat/primitives": "^1.3"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.19",
