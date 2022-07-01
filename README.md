@@ -31,7 +31,7 @@ return [
     | The publish status of collection entries and taxonomy terms
     | created by the factory.
     |
-    | Tipp: Randomize the status by setting this to '(bool) random_int(0, 1)'.
+    | Tip: Randomize the status by setting this to '(bool) random_int(0, 1)'.
     |
     */
 
