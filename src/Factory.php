@@ -8,6 +8,7 @@ use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
@@ -154,7 +155,12 @@ class Factory
     {
         return $items->map(function ($item) {
             if($this->isFieldset($item)){
-                return [];
+                if($fieldset = $this->getFieldsetByItem($item)){
+                    $item['field']['fields'] = $this->filterItems($fieldset->fields()->items());
+                    $item['field']['type'] = 'fieldset';
+                } else{
+                    return [];
+                }
             }
 
             if ($this->isBardOrReplicator($item)) {
@@ -175,6 +181,10 @@ class Factory
 
             return $item;
         })->filter(function ($item) {
+            if($this->isFieldset($item)){
+                return $this->hasFields($item);
+            }
+
             if ($this->isBardOrReplicator($item)) {
                 return $this->hasSets($item);
             }
@@ -382,6 +392,31 @@ class Factory
         $title = $this->faker->text($this->faker->numberBetween($minChars, $maxChars));
 
         return Str::removeRight($title, '.');
+    }
+
+    /**
+     * Get a fieldset by an item
+     *
+     * @param array $item
+     * @return \Statamic\Fields\Fieldset
+     */
+    protected function getFieldsetByItem(array $item): \Statamic\Fields\Fieldset
+    {
+        if(isset($item['import'])){
+            return $this->getFieldset($item['import']);
+        }
+        return null;
+    }
+
+    /**
+     * Get a fieldset by it's handle
+     *
+     * @param string $handle
+     * @return \Statamic\Fields\Fieldset
+     */
+    protected function getFieldset(string $handle): \Statamic\Fields\Fieldset
+    {
+        return Fieldset::find($handle);
     }
 
     /**
