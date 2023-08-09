@@ -1,4 +1,4 @@
-![Statamic](https://flat.badgen.net/badge/Statamic/3.0+/FF269E) ![Packagist version](https://flat.badgen.net/packagist/v/aerni/factory/latest) ![Packagist Total Downloads](https://flat.badgen.net/packagist/dt/aerni/factory)
+![Statamic](https://flat.badgen.net/badge/Statamic/4.0+/FF269E) ![Packagist version](https://flat.badgen.net/packagist/v/aerni/factory/latest) ![Packagist Total Downloads](https://flat.badgen.net/packagist/dt/aerni/factory)
 
 # Factory
 
