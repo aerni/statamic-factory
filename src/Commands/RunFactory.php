@@ -51,8 +51,6 @@ class RunFactory extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
     public function handle(): void
     {
@@ -102,12 +100,6 @@ class RunFactory extends Command
 
     /**
      * Run the factory.
-     *
-     * @param string $contentType
-     * @param string $contentHandle
-     * @param string $blueprintHandle
-     * @param string $amount
-     * @return void
      */
     protected function runFactory(string $contentType, string $contentHandle, string $blueprintHandle, string $amount): void
     {
@@ -121,8 +113,6 @@ class RunFactory extends Command
 
     /**
      * Get the available asset container handles.
-     *
-     * @return array
      */
     // protected function assetContainers(): array
     // {
@@ -133,8 +123,6 @@ class RunFactory extends Command
 
     /**
      * Get the available collection handles.
-     *
-     * @return array
      */
     protected function collections(): array
     {
@@ -149,8 +137,6 @@ class RunFactory extends Command
 
     /**
      * Get the available global handles.
-     *
-     * @return array
      */
     protected function globals(): array
     {
@@ -167,8 +153,6 @@ class RunFactory extends Command
 
     /**
      * Get the available taxonomy handles.
-     *
-     * @return array
      */
     protected function taxonomies(): array
     {
@@ -193,8 +177,6 @@ class RunFactory extends Command
 
     /**
      * Get blueprint handles
-     *
-     * @return array
      */
     protected function blueprints(string $path): array
     {
@@ -225,11 +207,6 @@ class RunFactory extends Command
 
     /**
      * Validate the answer of a question.
-     *
-     * @param string $question
-     * @param string $field
-     * @param array $rules
-     * @return string
      */
     protected function askValid(string $question, string $field, array $rules): string
     {
@@ -247,9 +224,6 @@ class RunFactory extends Command
     /**
      * Validate the input.
      *
-     * @param array $rules
-     * @param string $fieldName
-     * @param string $value
      * @return mixed
      */
     protected function validateInput(array $rules, string $fieldName, string $value)

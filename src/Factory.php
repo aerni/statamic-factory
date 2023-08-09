@@ -98,12 +98,6 @@ class Factory
 
     /**
      * Run the factory.
-     *
-     * @param string $contentType
-     * @param string $contentHandle
-     * @param string $blueprintHandle
-     * @param int $amount
-     * @return void
      */
     public function run(string $contentType, string $contentHandle, string $blueprintHandle, int $amount): void
     {
@@ -117,8 +111,6 @@ class Factory
 
     /**
      * Get the fakeable items from the blueprint.
-     *
-     * @return array
      */
     protected function fakeableItems(): array
     {
@@ -146,9 +138,6 @@ class Factory
 
     /**
      * Filter the blueprint items.
-     *
-     * @param Collection $items
-     * @return array
      */
     protected function filterItems(Collection $items): array
     {
@@ -185,9 +174,6 @@ class Factory
 
     /**
      * Get the fields or an empty array.
-     *
-     * @param array $item
-     * @return Collection
      */
     protected function fields(array $item): Collection
     {
@@ -202,9 +188,6 @@ class Factory
 
     /**
      * Collect the sets from an item.
-     *
-     * @param array $item
-     * @return Collection
      */
     protected function sets(array $item): Collection
     {
@@ -213,8 +196,6 @@ class Factory
 
     /**
      * Make content based on its type.
-     *
-     * @return void
      */
     protected function makeContent(): void
     {
@@ -240,9 +221,6 @@ class Factory
      * TODO: Make image creation optional and instead focus on creating fake data for existing assets based on the container's blueprint.
      *
      * Create $amount of assets with fake data.
-     *
-     * @param int $amount
-     * @return void
      */
     protected function makeAsset(int $amount): void
     {
@@ -259,7 +237,7 @@ class Factory
                 false
             );
 
-            Asset::findById($this->contentHandle . '::' . $image)
+            Asset::findById($this->contentHandle.'::'.$image)
                 ->data($fakeData)
                 ->save();
         }
@@ -267,9 +245,6 @@ class Factory
 
     /**
      * Create $amount of entries with fake data.
-     *
-     * @param int $amount
-     * @return void
      */
     protected function makeEntry(int $amount): void
     {
@@ -293,8 +268,6 @@ class Factory
 
     /**
      * Fill the global set with fake data.
-     *
-     * @return void
      */
     protected function makeGlobal(): void
     {
@@ -306,9 +279,6 @@ class Factory
 
     /**
      * Create $amount of terms with fake data.
-     *
-     * @param int $amount
-     * @return void
      */
     protected function makeTerm(int $amount): void
     {
@@ -330,8 +300,6 @@ class Factory
 
     /**
      * Create fake data for the fakeable items.
-     *
-     * @return array
      */
     protected function fakeData(): array
     {
@@ -347,7 +315,6 @@ class Factory
     /**
      * Create fake data with the given Faker formatter.
      *
-     * @param string $fakerFormatter
      * @return mixed
      */
     protected function fakeItem(string $fakerFormatter)
@@ -360,8 +327,6 @@ class Factory
 
     /**
      * Create a fake title.
-     *
-     * @return string
      */
     protected function title(): string
     {
@@ -382,9 +347,6 @@ class Factory
 
     /**
      * Check if an item is of fieldtype bard or replicator.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function isBardOrReplicator(array $item): bool
     {
@@ -401,9 +363,6 @@ class Factory
 
     /**
      * Check if an item is of fieldtype grid.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function isGrid(array $item): bool
     {
@@ -416,9 +375,6 @@ class Factory
 
     /**
      * Check if an item has factory key.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function hasFactory(array $item): bool
     {
@@ -435,9 +391,6 @@ class Factory
 
     /**
      * Check if an item has fields.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function hasFields(array $item): bool
     {
@@ -454,9 +407,6 @@ class Factory
 
     /**
      * Check if an item has sets.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function hasSets(array $item): bool
     {
@@ -470,9 +420,7 @@ class Factory
     /**
      * Check if the passed value is a faker formatter.
      *
-     * @param mixed $value
-     * @param string $key
-     * @return bool
+     * @param  mixed  $value
      */
     protected function isFakerFormatter($value, string $key): bool
     {

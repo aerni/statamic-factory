@@ -9,8 +9,7 @@ class Mapper
     /**
      * Map the items.
      *
-     * @param Collection $items
-     * @return array
+     * @param  Collection  $items
      */
     public function mapItems(array $items): array
     {
@@ -25,9 +24,6 @@ class Mapper
 
     /**
      * Handle special fieldtype.
-     *
-     * @param array $item
-     * @return array
      */
     protected function handleSpecialFieldtype(array $item): array
     {
@@ -50,9 +46,6 @@ class Mapper
 
     /**
      * Map bard and replicator fieldtype to its expected data structure.
-     *
-     * @param array $item
-     * @return array
      */
     protected function mapBardAndReplicator(array $item): array
     {
@@ -80,7 +73,7 @@ class Mapper
         $items = collect($sets)->flatMap(function ($set, $key) use ($setCount, $sets) {
             $items = [];
 
-            for ($i = 0 ; $i < $setCount[$key]; $i++) {
+            for ($i = 0; $i < $setCount[$key]; $i++) {
                 array_push($items, $sets[$key]);
             }
 
@@ -94,9 +87,6 @@ class Mapper
 
     /**
      * Map grid fieldtype to its expected data structure.
-     *
-     * @param array $item
-     * @return array
      */
     protected function mapGrid(array $item): array
     {
@@ -114,7 +104,7 @@ class Mapper
             $handle => [],
         ];
 
-        for ($i = 0 ; $i < $rowCount; $i++) {
+        for ($i = 0; $i < $rowCount; $i++) {
             array_push($grid[$handle], $fields);
         }
 
@@ -123,9 +113,6 @@ class Mapper
 
     /**
      * Map table fieldtype to its expected data structure.
-     *
-     * @param array $item
-     * @return array
      */
     protected function mapTable(array $item): array
     {
@@ -144,14 +131,14 @@ class Mapper
             $handle => [],
         ];
 
-        for ($i = 0 ; $i < $rowCount; $i++) {
+        for ($i = 0; $i < $rowCount; $i++) {
             array_push($table[$handle], [
                 'cells' => [],
             ]);
         }
 
         $table[$handle] = array_map(function ($item) use ($cellCount, $formatter) {
-            for ($i = 0 ; $i < $cellCount; $i++) {
+            for ($i = 0; $i < $cellCount; $i++) {
                 array_push($item['cells'], $formatter);
             }
 
@@ -163,9 +150,6 @@ class Mapper
 
     /**
      * Map a simple fieldtype to its expected data structure.
-     *
-     * @param array $item
-     * @return array
      */
     protected function mapSimple(array $item): array
     {
@@ -176,9 +160,6 @@ class Mapper
 
     /**
      * Get the faker formatter from an item.
-     *
-     * @param array $item
-     * @return string
      */
     protected function formatter(array $item): string
     {
@@ -191,9 +172,6 @@ class Mapper
 
     /**
      * Check if the item is a fieldtype that needs special handling.
-     *
-     * @param array $item
-     * @return bool
      */
     protected function isSpecialFieldtype(array $item): bool
     {
