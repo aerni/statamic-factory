@@ -8,6 +8,7 @@ use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
@@ -142,6 +143,15 @@ class Factory
     protected function filterItems(Collection $items): array
     {
         return $items->map(function ($item) {
+            if($this->isFieldset($item)){
+                if($fieldset = $this->getFieldsetByItem($item)){
+                    $item['field']['fields'] = $this->filterItems($fieldset->fields()->items());
+                    $item['field']['type'] = 'fieldset';
+                } else{
+                    return [];
+                }
+            }
+
             if ($this->isBardOrReplicator($item)) {
                 $item['field']['sets'] = $this->sets($item)
                     ->map(function ($set) {
@@ -160,6 +170,10 @@ class Factory
 
             return $item;
         })->filter(function ($item) {
+            if($this->isFieldset($item)){
+                return $this->hasFields($item);
+            }
+
             if ($this->isBardOrReplicator($item)) {
                 return $this->hasSets($item);
             }
@@ -346,16 +360,58 @@ class Factory
     }
 
     /**
+     * Get a fieldset by an item
+     *
+     * @param array $item
+     * @return \Statamic\Fields\Fieldset
+     */
+    protected function getFieldsetByItem(array $item): \Statamic\Fields\Fieldset
+    {
+        if(isset($item['import'])){
+            return $this->getFieldset($item['import']);
+        }
+        return null;
+    }
+
+    /**
+     * Get a fieldset by it's handle
+     *
+     * @param string $handle
+     * @return \Statamic\Fields\Fieldset
+     */
+    protected function getFieldset(string $handle): \Statamic\Fields\Fieldset
+    {
+        return Fieldset::find($handle);
+    }
+
+    /**
+     * Check if an item is a fieldset
+     *
+     * @param array $item
+     * @return bool
+     */
+    protected function isFieldset(array $item): bool
+    {
+        if(isset($item['import'])){
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if an item is of fieldtype bard or replicator.
      */
     protected function isBardOrReplicator(array $item): bool
     {
-        if ($item['field']['type'] === 'bard') {
-            return true;
-        }
-
-        if ($item['field']['type'] === 'replicator') {
-            return true;
+        if(isset($item['field']['type'])){
+            if ($item['field']['type'] === 'bard') {
+                return true;
+            }
+    
+            if ($item['field']['type'] === 'replicator') {
+                return true;
+            }
         }
 
         return false;
@@ -366,7 +422,7 @@ class Factory
      */
     protected function isGrid(array $item): bool
     {
-        if ($item['field']['type'] === 'grid') {
+        if (isset($item['field']['type']) && $item['field']['type'] === 'grid') {
             return true;
         }
 
