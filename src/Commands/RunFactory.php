@@ -4,13 +4,11 @@ namespace Aerni\Factory\Commands;
 
 use Facades\Aerni\Factory\Factory;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection as LaravelCollection;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Collection;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Taxonomy;
 
-use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
@@ -68,60 +66,60 @@ class RunFactory extends Command
     {
         $collections = Collection::all();
 
-        $handle = $this->selectContent('Select the collection for which you want to create entries.', $collections);
+        $contentHandle = select(
+            label: 'Select the collection for which you want to create entries.',
+            options: $collections->mapWithKeys(fn ($collection) => [$collection->handle() => $collection->title()]),
+        );
 
-        $blueprint = select(
+        $blueprintHandle = select(
             label: 'Select the blueprint to use for creating the entries.',
-            options: $collections->firstWhere('handle', $handle)
+            options: $collections->firstWhere('handle', $contentHandle)
                 ->entryBlueprints()
                 ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
         );
 
         $amount = $this->selectAmount('How many entries do you want to create?');
 
-        Factory::run('entry', $handle, $blueprint, $amount);
+        Factory::run('entry', $contentHandle, $blueprintHandle, $amount);
     }
 
     protected function runTermFactory(): void
     {
         $taxonomies = Taxonomy::all();
 
-        $handle = $this->selectContent('Select the taxonomy for which you want to create terms.', $taxonomies);
+        $contentHandle = select(
+            label: 'Select the taxonomy for which you want to create terms.',
+            options: $taxonomies->mapWithKeys(fn ($taxonomy) => [$taxonomy->handle() => $taxonomy->title()]),
+        );
 
-        $blueprint = select(
+        $blueprintHandle = select(
             label: 'Select the blueprint to use for creating the terms.',
-            options: $taxonomies->firstWhere('handle', $handle)
+            options: $taxonomies->firstWhere('handle', $contentHandle)
                 ->termBlueprints()
                 ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
         );
 
         $amount = $this->selectAmount('How many terms do you want to create?');
 
-        Factory::run('term', $handle, $blueprint, $amount);
+        Factory::run('term', $contentHandle, $blueprintHandle, $amount);
     }
 
     protected function runGlobalFactory(): void
     {
         $globals = GlobalSet::all();
 
-        $handle = $this->selectContent('Select the global set you want to run the factory on.', $globals);
-
-        $blueprint = $globals->firstWhere(fn ($global) => $global->handle() === $handle)->blueprint();
-
-        if (is_null($blueprint)) {
-            error('The selected global set has no blueprint. Create a blueprint to use the factory.');
-            exit;
-        }
-
-        Factory::run('global', $handle, $blueprint, 1);
-    }
-
-    protected function selectContent(string $label, LaravelCollection $options): string
-    {
-        return select(
-            label: $label,
-            options: $options->mapWithKeys(fn ($option) => [$option->handle() => $option->title()]),
+        $contentHandle = select(
+            label: 'Select the global set you want to run the factory on.',
+            options: $globals->mapWithKeys(fn ($global) => [$global->handle() => $global->title()]),
+            validate: fn (string $value) =>
+                $globals->firstWhere(fn ($global) => $global->handle() === $value)->blueprint() === null
+                    ? 'The selected global set has no blueprint. Create a blueprint to use the factory.'
+                    : null,
         );
+
+        $blueprintHandle = $globals->firstWhere(fn ($global) => $global->handle() === $contentHandle)->blueprint()->handle();
+
+        Factory::run('global', $contentHandle, $blueprintHandle, 1);
     }
 
     protected function selectAmount(string $label): int
