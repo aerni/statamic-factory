@@ -68,7 +68,7 @@ class RunFactory extends Command
     {
         $collections = Collection::all();
 
-        $handle = $this->selectContent('For which collection do you want to create entries?', $collections);
+        $handle = $this->selectContent('Select the collection for which you want to create entries.', $collections);
 
         $blueprint = select(
             label: 'Select the blueprint to use for creating the entries.',
@@ -86,7 +86,7 @@ class RunFactory extends Command
     {
         $taxonomies = Taxonomy::all();
 
-        $handle = $this->selectContent('For which taxonomy do you want to create terms?', $taxonomies);
+        $handle = $this->selectContent('Select the taxonomy for which you want to create terms.', $taxonomies);
 
         $blueprint = select(
             label: 'Select the blueprint to use for creating the terms.',
@@ -104,7 +104,7 @@ class RunFactory extends Command
     {
         $globals = GlobalSet::all();
 
-        $handle = $this->selectContent('On which global set do you want to run the factory?', $globals);
+        $handle = $this->selectContent('Select the global set you want to run the factory on.', $globals);
 
         $blueprint = $globals->firstWhere(fn ($global) => $global->handle() === $handle)->blueprint();
 
