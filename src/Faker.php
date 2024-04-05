@@ -140,15 +140,8 @@ class Faker
      */
     protected function isBardOrReplicator(array $item): bool
     {
-        if ($item['field']['type'] === 'bard') {
-            return true;
-        }
-
-        if ($item['field']['type'] === 'replicator') {
-            return true;
-        }
-
-        return false;
+        return $item['field']['type'] === 'bard'
+            || $item['field']['type'] === 'replicator';
     }
 
     /**
@@ -156,11 +149,7 @@ class Faker
      */
     protected function isGrid(array $item): bool
     {
-        if ($item['field']['type'] === 'grid') {
-            return true;
-        }
-
-        return false;
+        return $item['field']['type'] === 'grid';
     }
 
     /**
@@ -200,32 +189,19 @@ class Faker
      */
     protected function hasSets(array $item): bool
     {
-        if (collect($item['field']['sets'])->isEmpty()) {
-            return false;
-        }
-
-        return true;
+        return collect($item['field']['sets'])->isNotEmpty();
     }
 
     /**
      * Check if the passed value is a faker formatter.
-     *
-     * @param  mixed  $value
      */
-    protected function isFakerFormatter($value, string $key): bool
+    protected function isFakerFormatter(mixed $value, string $key): bool
     {
-        if (is_array($value)) {
-            return false;
-        }
-
-        if ($key === 'type') {
-            return false;
-        }
-
-        if ($key === 'enabled') {
-            return false;
-        }
-
-        return true;
+        return match (true) {
+            is_array($value) => false,
+            $key === 'type' => false,
+            $key === 'enabled' => false,
+            default => true,
+        };
     }
 }
