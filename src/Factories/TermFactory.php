@@ -2,13 +2,13 @@
 
 namespace Aerni\Factory\Factories;
 
-use Aerni\Factory\Faker;
 use Aerni\Factory\Contracts\Factory;
-use Statamic\Support\Str;
+use Aerni\Factory\Faker;
+use Statamic\Contracts\Taxonomies\Taxonomy;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 use Statamic\Fields\Blueprint;
-use Statamic\Contracts\Taxonomies\Taxonomy;
+use Statamic\Support\Str;
 
 class TermFactory implements Factory
 {

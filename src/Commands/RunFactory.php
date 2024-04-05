@@ -2,18 +2,18 @@
 
 namespace Aerni\Factory\Commands;
 
-use Aerni\Factory\Factories\TermFactory;
 use Aerni\Factory\Factories\EntryFactory;
 use Aerni\Factory\Factories\GlobalFactory;
-use Statamic\Facades\Taxonomy;
+use Aerni\Factory\Factories\TermFactory;
 use Illuminate\Console\Command;
-use Statamic\Facades\GlobalSet;
-use Statamic\Facades\Collection;
 use Statamic\Console\RunsInPlease;
+use Statamic\Facades\Collection;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Taxonomy;
 
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\text;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
 
 class RunFactory extends Command
 {
@@ -119,8 +119,7 @@ class RunFactory extends Command
         $selectedGlobal = select(
             label: 'Select the global set you want to run the factory on.',
             options: $globals->mapWithKeys(fn ($global) => [$global->handle() => $global->title()]),
-            validate: fn (string $value) =>
-                $globals->firstWhere(fn ($global) => $global->handle() === $value)->blueprint() === null
+            validate: fn (string $value) => $globals->firstWhere(fn ($global) => $global->handle() === $value)->blueprint() === null
                     ? 'The selected global set has no blueprint. Create a blueprint to use the factory.'
                     : null,
         );

@@ -2,8 +2,8 @@
 
 namespace Aerni\Factory\Factories;
 
-use Aerni\Factory\Faker;
 use Aerni\Factory\Contracts\Factory;
+use Aerni\Factory\Faker;
 use Statamic\Globals\GlobalSet;
 
 class GlobalFactory implements Factory

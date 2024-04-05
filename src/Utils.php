@@ -7,7 +7,7 @@ class Utils
     /**
      * Recursively map an array to a callback function.
      *
-     * @param function $callback
+     * @param  function  $callback
      */
     public static function mapRecursive(array $array, $callback): array
     {

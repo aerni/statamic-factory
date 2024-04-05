@@ -2,14 +2,14 @@
 
 namespace Aerni\Factory\Factories;
 
-use Aerni\Factory\Faker;
 use Aerni\Factory\Contracts\Factory;
-use Statamic\Support\Str;
+use Aerni\Factory\Faker;
+use Statamic\Contracts\Entries\Collection;
+use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
-use Statamic\Facades\Entry;
 use Statamic\Fields\Blueprint;
-use Statamic\Contracts\Entries\Collection;
+use Statamic\Support\Str;
 
 class EntryFactory implements Factory
 {
