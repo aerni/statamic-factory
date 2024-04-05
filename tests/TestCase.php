@@ -57,11 +57,11 @@ abstract class TestCase extends OrchestraTestCase
         ];
 
         foreach ($configs as $config) {
-            $app['config']->set("statamic.$config", require(__DIR__."/../vendor/statamic/cms/config/{$config}.php"));
+            $app['config']->set("statamic.$config", require (__DIR__."/../vendor/statamic/cms/config/{$config}.php"));
         }
 
         $app['config']->set('statamic.users.repository', 'file');
-        $app['config']->set('statamic.stache', require(__DIR__.'/__fixtures__/config/statamic/stache.php'));
+        $app['config']->set('statamic.stache', require (__DIR__.'/__fixtures__/config/statamic/stache.php'));
     }
 
     protected function makeUser()

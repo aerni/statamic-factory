@@ -123,15 +123,15 @@ class Factory
 
     protected function blueprint(): \Statamic\Fields\Blueprint
     {
-        if ($this->contentType === 'Collection Entry') {
+        if ($this->contentType === 'entry') {
             return Blueprint::find("collections/{$this->contentHandle}/{$this->blueprintHandle}");
         }
 
-        if ($this->contentType === 'Taxonomy Term') {
+        if ($this->contentType === 'term') {
             return Blueprint::find("taxonomies/{$this->contentHandle}/{$this->blueprintHandle}");
         }
 
-        if ($this->contentType === 'Global') {
+        if ($this->contentType === 'global') {
             return Blueprint::find("globals/{$this->contentHandle}");
         }
     }
@@ -203,15 +203,15 @@ class Factory
             $this->makeAsset($this->amount);
         }
 
-        if ($this->contentType === 'Collection Entry') {
+        if ($this->contentType === 'entry') {
             $this->makeEntry($this->amount);
         }
 
-        if ($this->contentType === 'Global') {
+        if ($this->contentType === 'global') {
             $this->makeGlobal();
         }
 
-        if ($this->contentType === 'Taxonomy Term') {
+        if ($this->contentType === 'term') {
             $this->makeTerm($this->amount);
         }
     }
