@@ -3,12 +3,11 @@
 namespace Aerni\Factory;
 
 use Faker\Generator;
-use Aerni\Factory\Mapper;
-use Statamic\Support\Str;
-use Statamic\Fields\Blueprint;
-use Stillat\Primitives\Parser;
 use Illuminate\Support\Collection;
+use Statamic\Fields\Blueprint;
+use Statamic\Support\Str;
 use Stillat\Primitives\MethodRunner;
+use Stillat\Primitives\Parser;
 
 class Faker
 {
@@ -18,8 +17,7 @@ class Faker
         protected Mapper $mapper,
         protected Parser $parser,
         protected MethodRunner $runner
-    )
-    {
+    ) {
         //
     }
 
@@ -37,7 +35,7 @@ class Faker
     public function title(): string
     {
         $minChars = config('factory.title.chars.0');
-        $maxChars =  config('factory.title.chars.1');
+        $maxChars = config('factory.title.chars.1');
 
         $title = config('factory.title.real_text')
             ? $this->generator->realText($this->generator->numberBetween($minChars, $maxChars))
