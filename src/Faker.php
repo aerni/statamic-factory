@@ -28,13 +28,7 @@ class Faker
      */
     public function data(): array
     {
-        return Utils::mapRecursive($this->fakeableItems(), function ($value, $key) {
-            if ($this->isFakerFormatter($value, $key)) {
-                return $this->fakeItem($value);
-            }
-
-            return $value;
-        });
+        return Utils::mapRecursive($this->fakeableFields(), fn ($value) => $this->fakeField($value));
     }
 
     /**
@@ -55,13 +49,12 @@ class Faker
     /**
      * Get the fakeable items from the blueprint.
      */
-    protected function fakeableItems(): array
+    protected function fakeableFields(): array
     {
         $blueprintItems = $this->blueprint->fields()->items();
         $filtered = $this->filterItems($blueprintItems);
-        $mapped = $this->mapper->mapItems($filtered);
 
-        return $mapped;
+        return $this->mapper->mapItems($filtered);
     }
 
     /**
@@ -127,7 +120,7 @@ class Faker
      *
      * @return mixed
      */
-    protected function fakeItem(string $fakerFormatter)
+    protected function fakeField(string $fakerFormatter)
     {
         return $this->runner->run(
             $this->parser->parseMethods($fakerFormatter),
@@ -190,18 +183,5 @@ class Faker
     protected function hasSets(array $item): bool
     {
         return collect($item['field']['sets'])->isNotEmpty();
-    }
-
-    /**
-     * Check if the passed value is a faker formatter.
-     */
-    protected function isFakerFormatter(mixed $value, string $key): bool
-    {
-        return match (true) {
-            is_array($value) => false,
-            $key === 'type' => false,
-            $key === 'enabled' => false,
-            default => true,
-        };
     }
 }

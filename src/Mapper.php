@@ -2,46 +2,31 @@
 
 namespace Aerni\Factory;
 
-use Illuminate\Support\Collection;
-
 class Mapper
 {
     /**
      * Map the items.
-     *
-     * @param  Collection  $items
      */
     public function mapItems(array $items): array
     {
-        return collect($items)->flatMap(function ($item) {
-            if ($this->isSpecialFieldtype($item)) {
-                return $this->handleSpecialFieldtype($item);
-            }
-
-            return $this->mapSimple($item);
-        })->toArray();
+        return collect($items)
+            ->flatMap(fn ($item) => $this->mapFieldtypes($item))
+            ->filter(fn ($value, $key) => $this->isFakerFormatter($value, $key))
+            ->toArray();
     }
 
     /**
-     * Handle special fieldtype.
+     * Map the data according to its fieldtype.
      */
-    protected function handleSpecialFieldtype(array $item): array
+    protected function mapFieldtypes(array $item): array
     {
-        if ($item['field']['type'] === 'grid') {
-            return $this->mapGrid($item);
-        }
-
-        if ($item['field']['type'] === 'bard') {
-            return $this->mapBardAndReplicator($item);
-        }
-
-        if ($item['field']['type'] === 'replicator') {
-            return $this->mapBardAndReplicator($item);
-        }
-
-        if ($item['field']['type'] === 'table') {
-            return $this->mapTable($item);
-        }
+        return match (true) {
+            $item['field']['type'] === 'bard' => $this->mapBardAndReplicator($item),
+            $item['field']['type'] === 'replicator' => $this->mapBardAndReplicator($item),
+            $item['field']['type'] === 'grid' => $this->mapGrid($item),
+            $item['field']['type'] === 'table' => $this->mapTable($item),
+            default => $this->mapSimple($item),
+        };
     }
 
     /**
@@ -52,22 +37,17 @@ class Mapper
         $handle = $item['handle'];
         $sets = $item['field']['sets'];
 
-        $setCount = collect($sets)->map(function ($item, $key) {
-            $minSets = $item['factory']['min_sets'];
-            $maxSets = $item['factory']['max_sets'];
-
-            return random_int($minSets, $maxSets);
-        })->toArray();
+        $setCount = collect($sets)
+            ->map(fn ($item) => random_int($item['factory']['min_sets'], $item['factory']['max_sets']))
+            ->toArray();
 
         $sets = collect($item['field']['sets'])->map(function ($set, $key) {
-            $fields = collect($set['fields'])->flatMap(function ($item) {
-                return $this->mapItems([$item]);
-            });
-
-            return $fields->merge([
-                'type' => $key,
-                'enabled' => true,
-            ]);
+            return collect($set['fields'])
+                ->flatMap(fn ($item) => $this->mapItems([$item]))
+                ->merge([
+                    'type' => $key,
+                    'enabled' => true,
+                ]);
         })->toArray();
 
         $items = collect($sets)->flatMap(function ($set, $key) use ($setCount, $sets) {
@@ -96,9 +76,9 @@ class Mapper
         $maxRows = $item['field']['factory']['max_rows'];
         $rowCount = random_int($minRows, $maxRows);
 
-        $fields = collect($item['field']['fields'])->flatMap(function ($item) {
-            return $this->mapItems([$item]);
-        })->toArray();
+        $fields = collect($item['field']['fields'])
+            ->flatMap(fn ($item) => $this->mapItems([$item]))
+            ->toArray();
 
         $grid = [
             $handle => [],
@@ -163,24 +143,21 @@ class Mapper
      */
     protected function formatter(array $item): string
     {
-        if (is_array($item['field']['factory'])) {
-            return $item['field']['factory']['formatter'];
-        }
-
-        return $item['field']['factory'];
+        return is_array($item['field']['factory'])
+            ? $item['field']['factory']['formatter']
+            : $item['field']['factory'];
     }
 
     /**
-     * Check if the item is a fieldtype that needs special handling.
+     * Check if the passed value is a faker formatter.
      */
-    protected function isSpecialFieldtype(array $item): bool
+    protected function isFakerFormatter(mixed $value, string $key): bool
     {
-        $specialFieldtypes = ['bard', 'grid', 'replicator', 'table'];
-
-        if (in_array($item['field']['type'], $specialFieldtypes)) {
-            return true;
-        }
-
-        return false;
+        return match (true) {
+            is_array($value) => false,
+            $key === 'type' => false,
+            $key === 'enabled' => false,
+            default => true,
+        };
     }
 }
