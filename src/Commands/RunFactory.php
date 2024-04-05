@@ -3,16 +3,17 @@
 namespace Aerni\Factory\Commands;
 
 use Facades\Aerni\Factory\Factory;
-use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-use Statamic\Facades\GlobalSet;
-use Statamic\Facades\Collection;
-use function Laravel\Prompts\text;
+use Illuminate\Support\Collection as LaravelCollection;
 use Statamic\Console\RunsInPlease;
+use Statamic\Facades\Collection;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Taxonomy;
+
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
-use Illuminate\Support\Collection as LaravelCollection;
+use function Laravel\Prompts\text;
 
 class RunFactory extends Command
 {
@@ -39,7 +40,7 @@ class RunFactory extends Command
             options: [
                 'entry' => 'Entry',
                 'term' => 'Term',
-                'global' => 'Global'
+                'global' => 'Global',
             ],
             validate: fn (string $value) => match ($value) {
                 'entry' => Collection::all()->isEmpty()
@@ -108,7 +109,7 @@ class RunFactory extends Command
         $blueprint = $globals->firstWhere(fn ($global) => $global->handle() === $handle)->blueprint();
 
         if (is_null($blueprint)) {
-            error("The selected global set has no blueprint. Create a blueprint to use the factory.");
+            error('The selected global set has no blueprint. Create a blueprint to use the factory.');
             exit;
         }
 
