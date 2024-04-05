@@ -2,15 +2,17 @@
 
 namespace Aerni\Factory\Commands;
 
-use Aerni\Factory\Factory;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Validator;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\AssetContainer;
-use Statamic\Facades\Blueprint;
-use Statamic\Facades\Collection;
-use Statamic\Facades\GlobalSet;
+use Facades\Aerni\Factory\Factory;
 use Statamic\Facades\Taxonomy;
+use Illuminate\Console\Command;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Collection;
+use function Laravel\Prompts\text;
+use Statamic\Console\RunsInPlease;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
+use Illuminate\Support\Collection as LaravelCollection;
 
 class RunFactory extends Command
 {
@@ -28,214 +30,109 @@ class RunFactory extends Command
      *
      * @var string
      */
-    protected $description = 'Generate fake content with the factory';
+    protected $description = 'Generate content with the factory';
 
-    /**
-     * The factory instance.
-     *
-     * @var Factory
-     */
-    protected $factory;
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct(Factory $factory)
-    {
-        parent::__construct();
-
-        $this->factory = $factory;
-    }
-
-    /**
-     * Execute the console command.
-     */
     public function handle(): void
     {
-        $contentType = $this->choice(
-            'Choose the type of content you want to create',
-            ['Collection Entry', 'Taxonomy Term', 'Global']
+        $type = select(
+            label: 'Select the type of content you want to create.',
+            options: [
+                'entry' => 'Entry',
+                'term' => 'Term',
+                'global' => 'Global'
+            ],
+            validate: fn (string $value) => match ($value) {
+                'entry' => Collection::all()->isEmpty()
+                    ? 'You need to create at least one collection to use the factory.'
+                    : null,
+                'term' => Taxonomy::all()->isEmpty()
+                    ? 'You need to create at least one taxonomy to use the factory.'
+                    : null,
+                'global' => GlobalSet::all()->isEmpty()
+                    ? 'You need to create at least one global set to use the factory.'
+                    : null,
+            },
         );
 
-        // if ($contentType === 'Asset' && $this->hasAssetContainers()) {
-        //     $contentHandle = $this->choice('Choose an asset container', $this->assetContainers());
-        //     $blueprintHandle = $this->assetBlueprint($contentHandle);
-        //     $amount = $this->askValid(
-        //         "How many assets do you want to create?",
-        //         'amount',
-        //         ['required', 'numeric', 'min:1']
-        //     );
-        // }
+        match ($type) {
+            'entry' => $this->runEntryFactory(),
+            'term' => $this->runTermFactory(),
+            'global' => $this->runGlobalFactory(),
+        };
 
-        if ($contentType === 'Collection Entry') {
-            $contentHandle = $this->choice('Choose a collection', $this->collections());
-            $blueprintHandle = $this->choice('Choose the blueprint for your entries', $this->blueprints("collections/$contentHandle"));
-            $amount = $this->askValid(
-                'How many entries do you want to create?',
-                'amount',
-                ['required', 'numeric', 'min:1']
-            );
-        }
-
-        if ($contentType === 'Global') {
-            $contentHandle = $this->choice('Choose a global set', $this->globals());
-            $blueprintHandle = collect($this->blueprints('globals'))->search($contentHandle);
-            $amount = 1;
-        }
-
-        if ($contentType === 'Taxonomy Term') {
-            $contentHandle = $this->choice('Choose a taxonomy', $this->taxonomies());
-            $blueprintHandle = $this->choice('Choose the blueprint for your terms', $this->blueprints("taxonomies/$contentHandle"));
-            $amount = $this->askValid(
-                'How many terms do you want to create?',
-                'amount',
-                ['required', 'numeric', 'min:1']
-            );
-        }
-
-        $this->runFactory($contentType, $contentHandle, $blueprintHandle, $amount);
+        info('The content was successfully created!');
     }
 
-    /**
-     * Run the factory.
-     */
-    protected function runFactory(string $contentType, string $contentHandle, string $blueprintHandle, string $amount): void
+    protected function runEntryFactory(): void
     {
-        try {
-            $this->factory->run($contentType, $contentHandle, $blueprintHandle, $amount);
-            $this->info('The factory was successfull!');
-        } catch (\Exception $exception) {
-            $this->error($exception->getMessage());
-        }
+        $collections = Collection::all();
+
+        $handle = $this->selectContent('For which collection do you want to create entries?', $collections);
+
+        $blueprint = select(
+            label: 'Select the blueprint to use for creating the entries.',
+            options: $collections->firstWhere('handle', $handle)
+                ->entryBlueprints()
+                ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
+        );
+
+        $amount = $this->selectAmount('How many entries do you want to create?');
+
+        Factory::run('entry', $handle, $blueprint, $amount);
     }
 
-    /**
-     * Get the available asset container handles.
-     */
-    // protected function assetContainers(): array
-    // {
-    //     return AssetContainer::all()->map(function ($container) {
-    //         return $container->handle();
-    //     })->toArray();
-    // }
-
-    /**
-     * Get the available collection handles.
-     */
-    protected function collections(): array
+    protected function runTermFactory(): void
     {
-        $collections = Collection::handles()->all();
+        $taxonomies = Taxonomy::all();
 
-        if (empty($collections)) {
-            $this->error('You have no collections. Create at least one collection to use the factory.');
-        }
+        $handle = $this->selectContent('For which taxonomy do you want to create terms?', $taxonomies);
 
-        return $collections;
+        $blueprint = select(
+            label: 'Select the blueprint to use for creating the terms.',
+            options: $taxonomies->firstWhere('handle', $handle)
+                ->termBlueprints()
+                ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
+        );
+
+        $amount = $this->selectAmount('How many terms do you want to create?');
+
+        Factory::run('term', $handle, $blueprint, $amount);
     }
 
-    /**
-     * Get the available global handles.
-     */
-    protected function globals(): array
+    protected function runGlobalFactory(): void
     {
-        $globals = GlobalSet::all()->map(function ($container) {
-            return $container->handle();
-        })->all();
+        $globals = GlobalSet::all();
 
-        if (empty($globals)) {
-            $this->error('You have no globals. Create at least one global set to use the factory.');
+        $handle = $this->selectContent('On which global set do you want to run the factory?', $globals);
+
+        $blueprint = $globals->firstWhere(fn ($global) => $global->handle() === $handle)->blueprint();
+
+        if (is_null($blueprint)) {
+            error("The selected global set has no blueprint. Create a blueprint to use the factory.");
+            exit;
         }
 
-        return $globals;
+        Factory::run('global', $handle, $blueprint, 1);
     }
 
-    /**
-     * Get the available taxonomy handles.
-     */
-    protected function taxonomies(): array
+    protected function selectContent(string $label, LaravelCollection $options): string
     {
-        $taxonomies = Taxonomy::handles()->all();
-
-        if (empty($taxonomies)) {
-            $this->error('You have no taxonomies. Create at least one taxonomy to use the factory.');
-        }
-
-        return $taxonomies;
+        return select(
+            label: $label,
+            options: $options->mapWithKeys(fn ($option) => [$option->handle() => $option->title()]),
+        );
     }
 
-    /**
-     * Get the blueprint handle of an asset container.
-     *
-     * @return string
-     */
-    // protected function assetBlueprint(string $contentHandle): string
-    // {
-    //     return AssetContainer::find($contentHandle)->blueprint();
-    // }
-
-    /**
-     * Get blueprint handles
-     */
-    protected function blueprints(string $path): array
+    protected function selectAmount(string $label): int
     {
-        $blueprints = Blueprint::in($path)->keys()->all();
-
-        if (empty($blueprints)) {
-            $this->error("No blueprint found in $path");
-        }
-
-        return $blueprints;
-    }
-
-    /**
-     * Check if there's any asset containers.
-     *
-     * @return bool
-     */
-    // protected function hasAssetContainers(): bool
-    // {
-    //     if (empty($this->assetContainers())) {
-    //         $this->error('You have no asset containers. Create at least one asset container to use the factory.');
-
-    //         return false;
-    //     }
-
-    //     return true;
-    // }
-
-    /**
-     * Validate the answer of a question.
-     */
-    protected function askValid(string $question, string $field, array $rules): string
-    {
-        $value = $this->ask($question);
-
-        if ($message = $this->validateInput($rules, $field, $value)) {
-            $this->error($message);
-
-            return $this->askValid($question, $field, $rules);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Validate the input.
-     *
-     * @return mixed
-     */
-    protected function validateInput(array $rules, string $fieldName, string $value)
-    {
-        $validator = Validator::make([
-            $fieldName => $value,
-        ], [
-            $fieldName => $rules,
-        ]);
-
-        return $validator->fails()
-            ? $validator->errors()->first($fieldName)
-            : null;
+        return text(
+            label: $label,
+            default: 1,
+            validate: fn (string $value) => match (true) {
+                ! is_numeric($value) => 'The value must be a number.',
+                $value < 1 => 'The value must be at least 1.',
+                default => null
+            }
+        );
     }
 }
