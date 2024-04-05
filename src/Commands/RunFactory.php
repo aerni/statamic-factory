@@ -2,16 +2,18 @@
 
 namespace Aerni\Factory\Commands;
 
-use Facades\Aerni\Factory\Factory;
-use Illuminate\Console\Command;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection;
-use Statamic\Facades\GlobalSet;
+use Aerni\Factory\Factories\TermFactory;
+use Aerni\Factory\Factories\EntryFactory;
+use Aerni\Factory\Factories\GlobalFactory;
 use Statamic\Facades\Taxonomy;
+use Illuminate\Console\Command;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Collection;
+use Statamic\Console\RunsInPlease;
 
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
+use function Laravel\Prompts\select;
 
 class RunFactory extends Command
 {
@@ -66,49 +68,55 @@ class RunFactory extends Command
     {
         $collections = Collection::all();
 
-        $contentHandle = select(
+        $selectedCollection = select(
             label: 'Select the collection for which you want to create entries.',
             options: $collections->mapWithKeys(fn ($collection) => [$collection->handle() => $collection->title()]),
         );
 
-        $blueprintHandle = select(
+        $selectedBlueprint = select(
             label: 'Select the blueprint to use for creating the entries.',
-            options: $collections->firstWhere('handle', $contentHandle)
+            options: $collections->firstWhere('handle', $selectedCollection)
                 ->entryBlueprints()
                 ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
         );
 
-        $amount = $this->selectAmount('How many entries do you want to create?');
+        $collection = $collections->firstWhere('handle', $selectedCollection);
 
-        Factory::run('entry', $contentHandle, $blueprintHandle, $amount);
+        $blueprint = $collection->entryBlueprints()->firstWhere('handle', $selectedBlueprint);
+
+        (new EntryFactory($collection, $blueprint))
+            ->run($this->selectAmount('How many entries do you want to create?'));
     }
 
     protected function runTermFactory(): void
     {
         $taxonomies = Taxonomy::all();
 
-        $contentHandle = select(
+        $selectedTaxonomy = select(
             label: 'Select the taxonomy for which you want to create terms.',
             options: $taxonomies->mapWithKeys(fn ($taxonomy) => [$taxonomy->handle() => $taxonomy->title()]),
         );
 
-        $blueprintHandle = select(
+        $selectedBlueprint = select(
             label: 'Select the blueprint to use for creating the terms.',
-            options: $taxonomies->firstWhere('handle', $contentHandle)
+            options: $taxonomies->firstWhere('handle', $selectedTaxonomy)
                 ->termBlueprints()
                 ->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
         );
 
-        $amount = $this->selectAmount('How many terms do you want to create?');
+        $taxonomy = $taxonomies->firstWhere('handle', $selectedTaxonomy);
 
-        Factory::run('term', $contentHandle, $blueprintHandle, $amount);
+        $blueprint = $taxonomy->termBlueprints()->firstWhere('handle', $selectedBlueprint);
+
+        (new TermFactory($taxonomy, $blueprint))
+            ->run($this->selectAmount('How many terms do you want to create?'));
     }
 
     protected function runGlobalFactory(): void
     {
         $globals = GlobalSet::all();
 
-        $contentHandle = select(
+        $selectedGlobal = select(
             label: 'Select the global set you want to run the factory on.',
             options: $globals->mapWithKeys(fn ($global) => [$global->handle() => $global->title()]),
             validate: fn (string $value) =>
@@ -117,9 +125,9 @@ class RunFactory extends Command
                     : null,
         );
 
-        $blueprintHandle = $globals->firstWhere(fn ($global) => $global->handle() === $contentHandle)->blueprint()->handle();
+        $global = $globals->firstWhere(fn ($global) => $global->handle() === $selectedGlobal);
 
-        Factory::run('global', $contentHandle, $blueprintHandle, 1);
+        (new GlobalFactory($global))->run();
     }
 
     protected function selectAmount(string $label): int
