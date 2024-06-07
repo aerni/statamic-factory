@@ -42,6 +42,10 @@ class Mapper
         if ($item['field']['type'] === 'table') {
             return $this->mapTable($item);
         }
+        
+        if ($item['field']['type'] === 'fieldset') {
+            return $this->mapFieldset($item);
+        }
     }
 
     /**
@@ -149,6 +153,21 @@ class Mapper
     }
 
     /**
+     * Map fieldset to its expected data structure
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function mapFieldset(array $item): array
+    {
+        $fields = collect($item['field']['fields'])->flatMap(function ($subItem) {
+            return $this->mapItems([$subItem]);
+        })->toArray();
+
+        return $fields;
+    }
+
+    /**
      * Map a simple fieldtype to its expected data structure.
      */
     protected function mapSimple(array $item): array
@@ -175,7 +194,7 @@ class Mapper
      */
     protected function isSpecialFieldtype(array $item): bool
     {
-        $specialFieldtypes = ['bard', 'grid', 'replicator', 'table'];
+        $specialFieldtypes = ['bard', 'grid', 'replicator', 'table', 'fieldset'];
 
         if (in_array($item['field']['type'], $specialFieldtypes)) {
             return true;
