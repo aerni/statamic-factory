@@ -26,6 +26,7 @@ class Faker
      */
     public function data(): array
     {
+        // TODO: Instead of recursively mapping the fields, we could fake the items in the mapper already.
         return Utils::mapRecursive($this->fakeableFields(), fn ($value) => $this->fakeField($value));
     }
 
