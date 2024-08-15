@@ -56,19 +56,25 @@ class MakeFactory extends Command
         $className = ucfirst($model['blueprint']);
         $definition = new DefinitionGenerator($model['blueprint']);
 
-        $stub = preg_replace(
-            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
-            [$classNamespace, $className, $definition],
-            File::get(__DIR__.'/stubs/factory.stub')
-        );
-
         $classPath = $this->generatePathFromNamespace($classNamespace)."{$className}Factory.php";
 
-        if (File::exists($classPath) && ! confirm(label: 'This factory already exists. Do you want to override the class?', default: false)) {
+        if (File::exists($classPath) && ! confirm(label: 'This factory already exists. Do you want to update the definition?', default: false)) {
             return;
         }
 
-        // TODO: Make it possible to update the definition of an existing factory class.
+        if (File::exists($classPath)) {
+            $stub = preg_replace(
+                '/public function definition\(\): array\s*{\s*return \[.*?\];\s*}/s',
+                "public function definition(): array\n{\n    $definition\n}",
+                File::get($classPath)
+            );
+        } else {
+            $stub = preg_replace(
+                ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
+                [$classNamespace, $className, $definition],
+                File::get(__DIR__.'/stubs/factory.stub')
+            );
+        }
 
         File::ensureDirectoryExists(dirname($classPath));
         File::put($classPath, $stub);
