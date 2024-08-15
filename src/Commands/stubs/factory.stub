@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ classNamespace }};
+
+use Aerni\Factory\Factories\Factory;
+
+class {{ className }}Factory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        {{ definition }}
+    }
+}

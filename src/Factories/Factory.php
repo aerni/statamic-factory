@@ -6,11 +6,14 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\Sequence;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 
 abstract class Factory
 {
+    use DefinitionHelpers;
+
     public static string $namespace = 'Database\\Factories\\Statamic\\';
 
     public function __construct(
@@ -110,6 +113,16 @@ abstract class Factory
                 is_callable($state) ? $state : fn () => $state
             ]),
         ]);
+    }
+
+    public function set($key, $value)
+    {
+        return $this->state([$key => $value]);
+    }
+
+    public function sequence(...$sequence)
+    {
+        return $this->state(new Sequence(...$sequence));
     }
 
     public function count(?int $count): self
