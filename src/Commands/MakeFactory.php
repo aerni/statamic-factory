@@ -42,10 +42,10 @@ class MakeFactory extends Command
             ],
             validate: fn (string $value) => match ($value) {
                 'entry' => Collection::all()->isEmpty()
-                    ? 'You need to create at least one collection to use the factory.'
+                    ? 'You need to create at least one collection to create a factory.'
                     : null,
                 'term' => Taxonomy::all()->isEmpty()
-                    ? 'You need to create at least one taxonomy to use the factory.'
+                    ? 'You need to create at least one taxonomy to create a factory.'
                     : null,
             },
         );
@@ -91,7 +91,7 @@ class MakeFactory extends Command
         };
 
         $selectedModel = select(
-            label: 'Select the collection of the factory.',
+            label: 'Select the model of the factory.',
             options: $models->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
         );
 
