@@ -4,9 +4,8 @@ namespace Aerni\Factory\Factories;
 
 use Closure;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
-use Aerni\Factory\Factories\Sequence;
+use Illuminate\Support\Str;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 
@@ -21,8 +20,7 @@ abstract class Factory
         protected ?Collection $states = null,
         protected ?Collection $afterMaking = null,
         protected ?Collection $afterCreating = null,
-    )
-    {
+    ) {
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
         $this->afterCreating ??= new Collection;
@@ -110,7 +108,7 @@ abstract class Factory
     {
         return $this->newInstance([
             'states' => $this->states->concat([
-                is_callable($state) ? $state : fn () => $state
+                is_callable($state) ? $state : fn () => $state,
             ]),
         ]);
     }
@@ -133,14 +131,14 @@ abstract class Factory
     public function afterMaking(Closure $callback): self
     {
         return $this->newInstance([
-            'afterMaking' => $this->afterMaking->concat([$callback])
+            'afterMaking' => $this->afterMaking->concat([$callback]),
         ]);
     }
 
     public function afterCreating(Closure $callback): self
     {
         return $this->newInstance([
-            'afterCreating' => $this->afterCreating->concat([$callback])
+            'afterCreating' => $this->afterCreating->concat([$callback]),
         ]);
     }
 
@@ -240,5 +238,4 @@ abstract class Factory
             'modelBlueprint' => $factoryNameParts[2],
         ];
     }
-
 }

@@ -7,9 +7,7 @@ use Statamic\Fields\Blueprint;
 
 class DefinitionGenerator implements Arrayable
 {
-    public function __construct(protected Blueprint $blueprint)
-    {
-    }
+    public function __construct(protected Blueprint $blueprint) {}
 
     public function toArray(): array
     {
@@ -124,6 +122,6 @@ class DefinitionGenerator implements Arrayable
             $output .= "{$indentation}{$formattedKey}{$formattedValue},\n";
         }
 
-        return $output .= str_repeat('    ', $indentLevel) . "]";
+        return $output .= str_repeat('    ', $indentLevel).']';
     }
 }

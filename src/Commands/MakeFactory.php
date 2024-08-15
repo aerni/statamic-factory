@@ -2,26 +2,17 @@
 
 namespace Aerni\Factory\Commands;
 
-use PhpParser\BuilderFactory;
-use Archetype\Facades\PHPFile;
-use Archetype\Support\Snippet;
-use Statamic\Facades\Taxonomy;
-use Statamic\Fields\Blueprint;
+use Aerni\Factory\Factories\DefinitionGenerator;
 use Illuminate\Console\Command;
-
-use Statamic\Facades\Collection;
-
-use function Laravel\Prompts\alert;
-use function Laravel\Prompts\info;
-use Statamic\Console\RunsInPlease;
-use function Laravel\Prompts\select;
-use function Laravel\Prompts\error;
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\note;
-
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
-use Aerni\Factory\Factories\DefinitionGenerator;
+use Statamic\Console\RunsInPlease;
+use Statamic\Facades\Collection;
+use Statamic\Facades\Taxonomy;
+
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
 
 class MakeFactory extends Command
 {
@@ -61,7 +52,7 @@ class MakeFactory extends Command
 
         $model = $this->getModelData($type);
 
-        $classNamespace = 'Database\\Factories\\Statamic\\' . collect([$model['repository'], $model['type']])->map(ucfirst(...))->implode('\\');
+        $classNamespace = 'Database\\Factories\\Statamic\\'.collect([$model['repository'], $model['type']])->map(ucfirst(...))->implode('\\');
         $className = ucfirst($model['blueprint']);
         $definition = new DefinitionGenerator($model['blueprint']);
 
@@ -122,6 +113,7 @@ class MakeFactory extends Command
     protected function generatePathFromNamespace(string $namespace): string
     {
         $name = str($namespace)->finish('\\')->replaceFirst(app()->getNamespace(), '')->lower();
+
         return base_path(str_replace('\\', '/', $name));
     }
 
