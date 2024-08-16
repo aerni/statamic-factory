@@ -27,8 +27,11 @@ class MakeSeeder extends Command
      *
      * @var string
      */
-    protected $description = 'Generate a seeder for a factory';
+    protected $description = 'Create a new seeder class for a Statamic factory';
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $factories = collect(File::allFiles(base_path('database/factories/statamic')));

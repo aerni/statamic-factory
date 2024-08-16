@@ -29,7 +29,7 @@ class Seed extends Command
      *
      * @var string
      */
-    protected $description = 'Run a seeder';
+    protected $description = 'Seed Statamic with entries and terms';
 
     protected $entryFactories;
 
@@ -39,6 +39,9 @@ class Seed extends Command
 
     protected $taxonomies;
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $entryFactoryDirectory = base_path('database/factories/statamic/collections');

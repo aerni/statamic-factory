@@ -2,17 +2,19 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Aerni\Factory\Factories\DefinitionGenerator;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection;
+use Illuminate\Support\Str;
 use Statamic\Facades\Taxonomy;
-
-use function Laravel\Prompts\confirm;
+use Illuminate\Console\Command;
+use Statamic\Facades\Collection;
 use function Laravel\Prompts\info;
+use Statamic\Console\RunsInPlease;
 use function Laravel\Prompts\select;
+
+use Illuminate\Support\Facades\File;
+use function Laravel\Prompts\confirm;
+use Illuminate\Support\Facades\Process;
+use Aerni\Factory\Factories\DefinitionGenerator;
+use Aerni\Factory\Factories\Factory;
 
 class MakeFactory extends Command
 {
@@ -30,12 +32,45 @@ class MakeFactory extends Command
      *
      * @var string
      */
-    protected $description = 'Generate a factory from a blueprint';
+    protected $description = 'Create a new Statamic factory class';
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
-        $type = select(
-            label: 'Select the type of factory you want to create.',
+        $factory = $this->getFactoryClassData();
+
+        $fileExists = File::exists($factory['path']);
+
+        if ($fileExists && ! confirm(
+            label: "This factory already exists. Do you want to update the factory's definition method?",
+            yes: 'Yes, update the existing factory.',
+            no: 'No, abort.',
+            default: false
+        )) {
+            return;
+        }
+
+        $fileContents = $fileExists
+            ? $this->updateDefinitionOfExistingFactory(File::get($factory['path']), $factory)
+            : $this->generateFactoryFromStub($factory);
+
+        File::ensureDirectoryExists(dirname($factory['path']));
+
+        File::put($factory['path'], $fileContents);
+
+        Process::run('./vendor/bin/pint ' . $factory['path']);
+
+        $fileExists
+            ? info("The factory was successfully updated: <comment>{$this->getRelativePath($factory['path'])}</comment>")
+            : info("The factory was successfully created: <comment>{$this->getRelativePath($factory['path'])}</comment>");
+    }
+
+    protected function getFactoryClassData(): array
+    {
+        $factoryType = select(
+            label: 'For which content type do you want to create a factory?',
             options: [
                 'entry' => 'Entry',
                 'term' => 'Term',
@@ -50,77 +85,72 @@ class MakeFactory extends Command
             },
         );
 
-        $model = $this->getModelData($type);
-
-        $classNamespace = 'Database\\Factories\\Statamic\\'.collect([$model['repository'], $model['type']])->map(ucfirst(...))->implode('\\');
-        $className = ucfirst($model['blueprint']);
-        $definition = new DefinitionGenerator($model['blueprint']);
-
-        $classPath = $this->generatePathFromNamespace($classNamespace)."{$className}Factory.php";
-
-        if (File::exists($classPath) && ! confirm(label: 'This factory already exists. Do you want to update the definition?', default: false)) {
-            return;
-        }
-
-        if (File::exists($classPath)) {
-            $stub = preg_replace(
-                '/public function definition\(\): array\s*{\s*return \[.*?\];\s*}/s',
-                "public function definition(): array\n{\n    $definition\n}",
-                File::get($classPath)
-            );
-        } else {
-            $stub = preg_replace(
-                ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
-                [$classNamespace, $className, $definition],
-                File::get(__DIR__.'/stubs/factory.stub')
-            );
-        }
-
-        File::ensureDirectoryExists(dirname($classPath));
-        File::put($classPath, $stub);
-        Process::run("./vendor/bin/pint $classPath");
-
-        info("The factory was successfully created: <comment>{$this->getRelativePath($classPath)}</comment>");
-    }
-
-    protected function getModelData(string $type): array
-    {
-        $models = match ($type) {
+        $models = match ($factoryType) {
             'entry' => Collection::all(),
             'term' => Taxonomy::all(),
         };
 
+        $repository = match ($factoryType) {
+            'entry' => 'collections',
+            'term' => 'taxonomies',
+        };
+
         $selectedModel = select(
-            label: 'Select the model of the factory.',
+            label: 'For which ' . Str::singular($repository) . ' do you want to create a factory?',
             options: $models->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
         );
 
         $model = $models->firstWhere('handle', $selectedModel);
 
-        $blueprints = match (true) {
-            ($type === 'entry') => $model->entryBlueprints(),
-            ($type === 'term') => $model->termBlueprints(),
+        $blueprints = match ($factoryType) {
+            'entry' => $model->entryBlueprints(),
+            'term' => $model->termBlueprints(),
         };
 
         $selectedBlueprint = select(
-            label: 'Select the blueprint of the factory.',
+            label: 'For which blueprint do you want to create a factory?',
             options: $blueprints->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
         );
 
         $blueprint = $blueprints->firstWhere('handle', $selectedBlueprint);
 
+        $namespace = Factory::$namespace.collect([$repository, $selectedModel])->map(ucfirst(...))->implode('\\');
+
+        $class = ucfirst($blueprint);
+
         return [
-            'repository' => ($type === 'entry') ? 'collections' : 'taxonomies',
-            'type' => $selectedModel,
-            'blueprint' => $blueprint,
+            'namespace' => $namespace,
+            'class' => $class,
+            'definition' => new DefinitionGenerator($blueprint),
+            'path' => "{$this->generatePathFromNamespace($namespace)}/{$class}Factory.php",
         ];
+    }
+
+    protected function updateDefinitionOfExistingFactory(string $fileContents, array $replacements): string
+    {
+        $definition = $replacements['definition'];
+
+        return preg_replace(
+            '/public function definition\(\): array\s*{\s*return \[.*?\];\s*}/s',
+            "public function definition(): array\n{\n    $definition\n}",
+            $fileContents,
+        );
+    }
+
+    protected function generateFactoryFromStub(array $replacements): string
+    {
+        return preg_replace(
+            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
+            [$replacements['namespace'], $replacements['class'], $replacements['definition']],
+            File::get(__DIR__.'/stubs/factory.stub')
+        );
     }
 
     protected function generatePathFromNamespace(string $namespace): string
     {
-        $name = str($namespace)->finish('\\')->replaceFirst(app()->getNamespace(), '')->lower();
+        $path = str($namespace)->replace('\\', '/')->lower();
 
-        return base_path(str_replace('\\', '/', $name));
+        return base_path($path);
     }
 
     protected function getRelativePath(string $path): string
