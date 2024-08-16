@@ -3,8 +3,8 @@
 namespace Aerni\Factory\Factories;
 
 use Aerni\Factory\Utils;
-use Statamic\Fields\Blueprint;
 use Illuminate\Contracts\Support\Arrayable;
+use Statamic\Fields\Blueprint;
 
 class DefinitionGenerator implements Arrayable
 {
@@ -17,7 +17,7 @@ class DefinitionGenerator implements Arrayable
 
     public function __toString(): string
     {
-        return 'return ' . Utils::arrayToString($this->toArray()) . ';';
+        return 'return '.Utils::arrayToString($this->toArray()).';';
     }
 
     public function mapItems(array $items): array
