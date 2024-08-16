@@ -132,7 +132,7 @@ class MakeFactory extends Command
 
         return preg_replace(
             '/public function definition\(\): array\s*{\s*return \[.*?\];\s*}/s',
-            "public function definition(): array\n{\n    $definition\n}",
+            "public function definition(): array\n{\n    return $definition;\n}",
             $fileContents,
         );
     }

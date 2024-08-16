@@ -17,7 +17,7 @@ class DefinitionGenerator implements Arrayable
 
     public function __toString(): string
     {
-        return 'return '.Utils::arrayToString($this->toArray()).';';
+        return Utils::arrayToString($this->toArray());
     }
 
     public function mapItems(array $items): array
