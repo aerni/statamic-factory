@@ -65,6 +65,7 @@ class DefinitionGenerator implements Arrayable
         ];
     }
 
+    // TODO: Fix this.
     protected function mapTable(array $item): array
     {
         $handle = $item['handle'];
