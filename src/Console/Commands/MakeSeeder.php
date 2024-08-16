@@ -37,7 +37,7 @@ class MakeSeeder extends Command
         $seeder = $this->getSeederClassData();
 
         if (File::exists($seeder['path']) && ! confirm(
-            label: "This seeder already exists. Do you want to override it?",
+            label: 'This seeder already exists. Do you want to override it?',
             yes: 'Yes, override.',
             no: 'No, abort.',
             default: false

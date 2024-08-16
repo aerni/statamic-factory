@@ -2,17 +2,17 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Illuminate\Support\Str;
-use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\text;
 use Illuminate\Support\Collection;
-
-use Statamic\Console\RunsInPlease;
-use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Collection as CollectionFacade;
+use Statamic\Facades\Taxonomy;
+
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
 
 class Seed extends Command
 {

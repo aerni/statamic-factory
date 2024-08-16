@@ -44,7 +44,7 @@ class MakeFactory extends Command
         $fileExists = File::exists($factory['path']);
 
         if ($fileExists && ! confirm(
-            label: "This factory already exists. Do you want to update its definition method?",
+            label: 'This factory already exists. Do you want to update its definition method?',
             yes: 'Yes, update the definition.',
             no: 'No, abort.',
             default: false
