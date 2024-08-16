@@ -67,7 +67,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function makeUser()
     {
         return User::make()
-            ->id((new \Statamic\Stache\Stache())->generateId())
+            ->id((new \Statamic\Stache\Stache)->generateId())
             ->email($this->faker->email)
             ->save();
     }
