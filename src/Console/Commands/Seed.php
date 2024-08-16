@@ -2,16 +2,17 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
-
+use Illuminate\Console\Command;
 use function Laravel\Prompts\info;
-use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
+use Illuminate\Support\Collection;
+
+use Statamic\Console\RunsInPlease;
+use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\File;
+use Statamic\Facades\Collection as CollectionFacade;
 
 class Seed extends Command
 {
@@ -31,13 +32,13 @@ class Seed extends Command
      */
     protected $description = 'Seed Statamic with entries and terms';
 
-    protected $entryFactories;
+    protected Collection $entryFactories;
 
-    protected $termFactories;
+    protected Collection $termFactories;
 
-    protected $collections;
+    protected Collection $collections;
 
-    protected $taxonomies;
+    protected Collection $taxonomies;
 
     /**
      * Execute the console command.
@@ -47,21 +48,24 @@ class Seed extends Command
         $entryFactoryDirectory = base_path('database/factories/statamic/collections');
         $termFactoryDirectory = base_path('database/factories/statamic/taxonomies');
 
-        $this->entryFactories = File::isDirectory($entryFactoryDirectory) ? collect(File::allFiles($entryFactoryDirectory)) : collect();
-        $this->termFactories = File::isDirectory($termFactoryDirectory) ? collect(File::allFiles($termFactoryDirectory)) : collect();
+        $this->entryFactories = File::isDirectory($entryFactoryDirectory)
+            ? collect(File::allFiles($entryFactoryDirectory))
+            : collect();
 
-        // Filter the selection to only show collection/taxonomies that have a factory
-        $this->collections = Collection::all()->filter(function ($collection) {
+        $this->termFactories = File::isDirectory($termFactoryDirectory)
+            ? collect(File::allFiles($termFactoryDirectory))
+            : collect();
+
+        $this->collections = CollectionFacade::all()->filter(function ($collection) {
             return $this->entryFactories->map->getRelativePath()->contains($collection->handle());
         });
 
-        // Filter the selection to only show collection/taxonomies that have a factory
         $this->taxonomies = Taxonomy::all()->filter(function ($taxonomy) {
             return $this->termFactories->map->getRelativePath()->contains($taxonomy->handle());
         });
 
-        $type = select(
-            label: 'Select the type of content you want to create.',
+        $factoryType = select(
+            label: 'Which type of content do you want to create?',
             options: [
                 'entry' => 'Entry',
                 'term' => 'Term',
@@ -78,48 +82,46 @@ class Seed extends Command
             },
         );
 
-        $factory = $this->getFactory($type);
+        $factory = $this->getFactory($factoryType);
 
         $seeder = $this->getSeederFromFactory($factory);
 
-        // If the selected factory has a seeder, use it.
-        if (class_exists($seeder)) {
-            app($seeder)->__invoke();
-            info('The seeder has been run!');
-        } else {
-            // If the selected factory has no seeder, use a generic seeder and ask how many entries to create.
-            $amount = $this->selectAmount('How many entries do you want to create?');
-            $factory::new()->count($amount)->create();
-            info('The content was successfully created!');
-        }
+        class_exists($seeder)
+            ? app($seeder)->__invoke()
+            : $factory::new()->count($this->askForAmount())->create();
+
+        info('The content was successfully created!');
     }
 
-    protected function getFactory(string $type): string
+    protected function getFactory(string $factoryType): string
     {
-        $models = match ($type) {
+        $models = match ($factoryType) {
             'entry' => $this->collections,
             'term' => $this->taxonomies,
         };
 
+        $repository = match ($factoryType) {
+            'entry' => 'collections',
+            'term' => 'taxonomies',
+        };
+
         $selectedModel = select(
-            label: 'Select the model of the factory.',
+            label: 'For which '.Str::singular($repository).' do you want to create content?',
             options: $models->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
         );
 
-        $model = $models->firstWhere('handle', $selectedModel);
-
-        $factories = $this->entryFactories->filter(function ($factory) use ($selectedModel) {
-            return $factory->getRelativePath() === $selectedModel;
-        });
+        $factories = $this->entryFactories
+            ->filter(fn ($factory) => $factory->getRelativePath() === $selectedModel)
+            ->values();
 
         $selectedFactory = select(
-            label: 'Select the factory',
+            label: "Which {$selectedModel} factory do you want to use?",
             options: $factories->map(fn ($factory) => $this->generateFactoryNameFromPath($factory->getFilename())),
         );
 
         $factory = $factories->firstWhere(fn ($factory) => $this->generateFactoryNameFromPath($factory->getFilename()) === $selectedFactory);
 
-        return $this->generateFullyQualifiedClassStringFromPath($factory->getPathname());
+        return Str::remove('.php', $this->generateNamespaceFromPath($factory->getPathname()));
     }
 
     protected function getSeederFromFactory(string $factory): string
@@ -143,14 +145,6 @@ class Seed extends Command
             ->implode('\\');
     }
 
-    protected function generateFullyQualifiedClassStringFromPath(string $path): string
-    {
-        return Str::of($this->generateNamespaceFromPath($path))
-            // ->prepend('\\')
-            ->remove('.php');
-        // ->append('::class');
-    }
-
     protected function generateFactoryNameFromPath(string $path): string
     {
         return Str::of($path)
@@ -163,10 +157,10 @@ class Seed extends Command
         return str_replace(base_path().'/', '', $path);
     }
 
-    protected function selectAmount(string $label): int
+    protected function askForAmount(): int
     {
         return text(
-            label: $label,
+            label: 'How many entries do you want to create?',
             default: 1,
             validate: fn (string $value) => match (true) {
                 ! is_numeric($value) => 'The value must be a number.',

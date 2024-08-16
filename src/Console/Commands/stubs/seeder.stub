@@ -3,7 +3,7 @@
 namespace {{ classNamespace }};
 
 use Illuminate\Database\Seeder;
-use {{ useFactory }};
+use {{ factoryClassImport }};
 
 class {{ className }}Seeder extends Seeder
 {
