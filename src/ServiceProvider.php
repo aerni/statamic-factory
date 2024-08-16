@@ -9,7 +9,6 @@ class ServiceProvider extends AddonServiceProvider
     protected $commands = [
         Console\Commands\MakeFactory::class,
         Console\Commands\MakeSeeder::class,
-        Console\Commands\RunFactory::class,
         Console\Commands\Seed::class,
     ];
 }
