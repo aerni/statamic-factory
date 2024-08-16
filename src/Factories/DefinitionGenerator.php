@@ -2,8 +2,9 @@
 
 namespace Aerni\Factory\Factories;
 
-use Illuminate\Contracts\Support\Arrayable;
+use Aerni\Factory\Utils;
 use Statamic\Fields\Blueprint;
+use Illuminate\Contracts\Support\Arrayable;
 
 class DefinitionGenerator implements Arrayable
 {
@@ -16,7 +17,7 @@ class DefinitionGenerator implements Arrayable
 
     public function __toString(): string
     {
-        return "return {$this->arrayToString($this->toArray())};";
+        return 'return ' . Utils::arrayToString($this->toArray()) . ';';
     }
 
     public function mapItems(array $items): array
@@ -103,25 +104,5 @@ class DefinitionGenerator implements Arrayable
         return [
             $item['handle'] => null,
         ];
-    }
-
-    protected function arrayToString($array, $indentLevel = 0): string
-    {
-        $output = "[\n";
-        $indentation = str_repeat('    ', $indentLevel + 1); // 4 spaces per indent level
-
-        foreach ($array as $key => $value) {
-            $formattedKey = is_int($key) ? '' : "'$key' => ";
-
-            if (is_array($value)) {
-                $formattedValue = $this->arrayToString($value, $indentLevel + 1);
-            } else {
-                $formattedValue = var_export($value, true);
-            }
-
-            $output .= "{$indentation}{$formattedKey}{$formattedValue},\n";
-        }
-
-        return $output .= str_repeat('    ', $indentLevel).']';
     }
 }
