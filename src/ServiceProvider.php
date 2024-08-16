@@ -8,6 +8,7 @@ class ServiceProvider extends AddonServiceProvider
 {
     protected $commands = [
         Commands\MakeFactory::class,
+        Commands\MakeSeeder::class,
         Commands\RunFactory::class,
     ];
 }
