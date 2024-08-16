@@ -2,17 +2,16 @@
 
 namespace Aerni\Factory\Commands;
 
-use Illuminate\Support\Str;
-use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-
-use Statamic\Facades\Collection;
-use function Laravel\Prompts\info;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Statamic\Console\RunsInPlease;
+use Statamic\Facades\Collection;
+use Statamic\Facades\Taxonomy;
+
+use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
-use Illuminate\Support\Facades\File;
-use function Laravel\Prompts\confirm;
 
 class Seed extends Command
 {
@@ -33,9 +32,11 @@ class Seed extends Command
     protected $description = 'Run a seeder';
 
     protected $entryFactories;
+
     protected $termFactories;
 
     protected $collections;
+
     protected $taxonomies;
 
     public function handle()
@@ -144,7 +145,7 @@ class Seed extends Command
         return Str::of($this->generateNamespaceFromPath($path))
             // ->prepend('\\')
             ->remove('.php');
-            // ->append('::class');
+        // ->append('::class');
     }
 
     protected function generateFactoryNameFromPath(string $path): string
