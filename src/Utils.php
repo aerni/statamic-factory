@@ -33,7 +33,7 @@ class Utils
             $formattedKey = is_int($key) ? '' : "'$key' => ";
 
             if (is_array($value)) {
-                $formattedValue = $this->arrayToString($value, $indentLevel + 1);
+                $formattedValue = self::arrayToString($value, $indentLevel + 1);
             } else {
                 $formattedValue = var_export($value, true);
             }
