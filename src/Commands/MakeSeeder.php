@@ -2,19 +2,14 @@
 
 namespace Aerni\Factory\Commands;
 
-use ReflectionClass;
-use Illuminate\Support\Str;
-use Statamic\Facades\Taxonomy;
 use Illuminate\Console\Command;
-use Statamic\Facades\Collection;
-use function Laravel\Prompts\info;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Statamic\Console\RunsInPlease;
 
-use function Laravel\Prompts\select;
-use Illuminate\Support\Facades\File;
 use function Laravel\Prompts\confirm;
-use Illuminate\Support\Facades\Process;
-use Aerni\Factory\Factories\DefinitionGenerator;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
 
 class MakeSeeder extends Command
 {
