@@ -10,5 +10,6 @@ class ServiceProvider extends AddonServiceProvider
         Commands\MakeFactory::class,
         Commands\MakeSeeder::class,
         Commands\RunFactory::class,
+        Commands\Seed::class,
     ];
 }
