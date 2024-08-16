@@ -1,6 +1,6 @@
 <?php
 
-namespace Aerni\Factory\Commands;
+namespace Aerni\Factory\Console\Commands;
 
 use Aerni\Factory\Factories\EntryFactory;
 use Aerni\Factory\Factories\GlobalFactory;

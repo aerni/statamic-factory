@@ -1,6 +1,6 @@
 <?php
 
-namespace Aerni\Factory\Commands;
+namespace Aerni\Factory\Console\Commands;
 
 use Aerni\Factory\Factories\DefinitionGenerator;
 use Illuminate\Console\Command;

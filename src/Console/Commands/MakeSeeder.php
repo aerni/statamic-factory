@@ -1,6 +1,6 @@
 <?php
 
-namespace Aerni\Factory\Commands;
+namespace Aerni\Factory\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
