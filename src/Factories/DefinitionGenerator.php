@@ -2,7 +2,7 @@
 
 namespace Aerni\Factory\Factories;
 
-use Aerni\Factory\Utils;
+use Aerni\Factory\Support\Utils;
 use Illuminate\Contracts\Support\Arrayable;
 use Statamic\Fields\Blueprint;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Aerni\Factory;
+namespace Aerni\Factory\Support;
 
 class Utils
 {
