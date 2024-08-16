@@ -1,6 +1,6 @@
 {
     "name": "aerni/factory",
-    "description": "Quickly whip up fake content",
+    "description": "The Statamic equivalent of Laravel model factories",
     "keywords": [
         "statamic",
         "factory"
@@ -53,7 +53,7 @@
     "extra": {
         "statamic": {
             "name": "Factory",
-            "description": "Quicly whip up fake content"
+            "description": "The Statamic equivalent of Laravel model factories"
         },
         "laravel": {
             "providers": [
