@@ -59,7 +59,7 @@ class MakeSeeder extends Command
         $factories = collect(File::allFiles(base_path('database/factories/statamic')));
 
         $selectedFactory = select(
-            label: 'For which factory do you want to create a seeder.',
+            label: 'For which factory do you want to create a seeder?',
             options: $factories->map->getRelativePathName(),
         );
 
@@ -90,7 +90,9 @@ class MakeSeeder extends Command
 
     protected function generatePathFromNamespace(string $namespace): string
     {
-        $path = str($namespace)->replace('\\', '/')->lower();
+        $path = collect(explode('\\', $namespace))
+            ->map(fn ($value) => Str::snake($value))
+            ->implode('/');
 
         return base_path($path);
     }
@@ -98,7 +100,7 @@ class MakeSeeder extends Command
     protected function generateNamespaceFromPath(string $path): string
     {
         return collect(explode('/', $this->getRelativePath($path)))
-            ->map(ucfirst(...))
+            ->map(Str::studly(...))
             ->implode('\\');
     }
 

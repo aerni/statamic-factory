@@ -114,9 +114,9 @@ class MakeFactory extends Command
 
         $blueprint = $blueprints->firstWhere('handle', $selectedBlueprint);
 
-        $namespace = Factory::$namespace.collect([$repository, $selectedModel])->map(ucfirst(...))->implode('\\');
+        $namespace = Factory::$namespace.collect([$repository, $selectedModel])->map(Str::studly(...))->implode('\\');
 
-        $class = ucfirst($blueprint);
+        $class = Str::of($blueprint)->studly();
 
         return [
             'namespace' => $namespace,
@@ -148,7 +148,9 @@ class MakeFactory extends Command
 
     protected function generatePathFromNamespace(string $namespace): string
     {
-        $path = str($namespace)->replace('\\', '/')->lower();
+        $path = collect(explode('\\', $namespace))
+            ->map(fn ($value) => Str::snake($value))
+            ->implode('/');
 
         return base_path($path);
     }
