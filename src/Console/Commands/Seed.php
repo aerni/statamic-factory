@@ -86,9 +86,14 @@ class Seed extends Command
 
         $seeder = $this->getSeederFromFactory($factory);
 
-        class_exists($seeder)
-            ? app($seeder)->__invoke()
-            : $factory::new()->count($this->askForAmount())->create();
+        if (class_exists($seeder)) {
+            $this->laravel->make($seeder)
+                ->setContainer($this->laravel)
+                ->setCommand($this)
+                ->__invoke();
+        } else {
+            $factory::new()->count($this->askForAmount())->create();
+        }
 
         info('The content was successfully created!');
     }
