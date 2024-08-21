@@ -2,14 +2,15 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Console\Command;
+use function Laravel\Prompts\info;
 use Statamic\Console\RunsInPlease;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\File;
+use function Laravel\Prompts\confirm;
+use Illuminate\Support\Facades\Process;
 
 class MakeSeeder extends Command
 {
@@ -20,7 +21,7 @@ class MakeSeeder extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:make:seeder';
+    protected $signature = 'statamic:make:seeder {factory?}';
 
     /**
      * The console command description.
@@ -34,7 +35,9 @@ class MakeSeeder extends Command
      */
     public function handle()
     {
-        $seeder = $this->getSeederClassData();
+        $seeder = $this->argument('factory')
+            ? $this->getSeederClassDataFromFactoryClass()
+            : $this->getSeederClassData();
 
         if (File::exists($seeder['path']) && ! confirm(
             label: 'This seeder already exists. Do you want to override it?',
@@ -47,17 +50,34 @@ class MakeSeeder extends Command
 
         $fileContents = $this->generateSeederFromStub($seeder);
 
-        File::ensureDirectoryExists(dirname($seeder['path']));
-
-        File::put($seeder['path'], $fileContents);
+        $this->saveFile($seeder['path'], $fileContents);
 
         info("The seeder was successfully created: <comment>{$this->getRelativePath($seeder['path'])}</comment>");
     }
 
-    protected function getSeederClassData()
+    protected function getSeederClassDataFromFactoryClass()
+    {
+        $factory = $this->argument('factory');
+
+        $classNamespace = Str::of($factory)->beforeLast('\\')->replace('Factories', 'Seeders');
+        $factoryClassName = Str::of($factory)->afterLast('\\')->append('Factory');
+        $factoryClassImport = "{$factory}Factory";
+        $className = Str::remove('Factory', $factoryClassName);
+
+        return [
+            'classNamespace' => $classNamespace,
+            'className' => $className,
+            'factoryClassImport' => $factoryClassImport,
+            'factoryClassName' => $factoryClassName,
+            'path' => "{$this->generatePathFromNamespace($classNamespace)}/{$className}Seeder.php",
+        ];
+    }
+
+    protected function getSeederClassData(): array
     {
         $factories = collect(File::allFiles(base_path('database/factories/statamic')));
 
+        // TODO: Show namespace, not path.
         $selectedFactory = select(
             label: 'For which factory do you want to create a seeder?',
             options: $factories->map->getRelativePathName(),
@@ -107,5 +127,14 @@ class MakeSeeder extends Command
     protected function getRelativePath(string $path): string
     {
         return str_replace(base_path().'/', '', $path);
+    }
+
+    protected function saveFile(string $path, string $contents): void
+    {
+        File::ensureDirectoryExists(dirname($path));
+
+        File::put($path, $contents);
+
+        Process::run('./vendor/bin/pint '.$path);
     }
 }

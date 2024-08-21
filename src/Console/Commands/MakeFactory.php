@@ -2,19 +2,20 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Aerni\Factory\Factories\DefinitionGenerator;
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
+use Illuminate\Console\Command;
+use Statamic\Facades\Collection;
+use function Laravel\Prompts\info;
+use Statamic\Console\RunsInPlease;
+use Aerni\Factory\Factories\Factory;
+use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\File;
 
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\Process;
+use Aerni\Factory\Console\Commands\MakeSeeder;
+use Aerni\Factory\Factories\DefinitionGenerator;
 
 class MakeFactory extends Command
 {
@@ -37,34 +38,46 @@ class MakeFactory extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $factory = $this->getFactoryClassData();
 
-        $fileExists = File::exists($factory['path']);
+        File::exists($factory['path'])
+            ? $this->handleUpdateOfExistingFactory($factory)
+            : $this->handleGenerationOfNewFactory($factory);
 
-        if ($fileExists && ! confirm(
+        if ($factory['createSeeder']) {
+            $this->call(MakeSeeder::class, ['factory' => "{$factory['namespace']}\\{$factory['class']}"]);
+        }
+    }
+
+    protected function handleGenerationOfNewFactory(array $factory): void
+    {
+        $fileContents = $this->generateFactoryFromStub($factory);
+
+        $this->saveFile($factory['path'], $fileContents);
+
+        info("The factory was successfully created: <comment>{$this->getRelativePath($factory['path'])}</comment>");
+    }
+
+    protected function handleUpdateOfExistingFactory(array $factory): void
+    {
+        $shouldUpdateDefinition = confirm(
             label: 'This factory already exists. Do you want to update its definition method?',
             yes: 'Yes, update the definition.',
             no: 'No, abort.',
             default: false
-        )) {
+        );
+
+        if (! $shouldUpdateDefinition) {
             return;
         }
 
-        $fileContents = $fileExists
-            ? $this->updateDefinitionOfExistingFactory(File::get($factory['path']), $factory)
-            : $this->generateFactoryFromStub($factory);
+        $fileContents = $this->updateDefinitionOfExistingFactory(File::get($factory['path']), $factory);
 
-        File::ensureDirectoryExists(dirname($factory['path']));
+        $this->saveFile($factory['path'], $fileContents);
 
-        File::put($factory['path'], $fileContents);
-
-        Process::run('./vendor/bin/pint '.$factory['path']);
-
-        $fileExists
-            ? info("The factory was successfully updated: <comment>{$this->getRelativePath($factory['path'])}</comment>")
-            : info("The factory was successfully created: <comment>{$this->getRelativePath($factory['path'])}</comment>");
+        info("The factory was successfully updated: <comment>{$this->getRelativePath($factory['path'])}</comment>");
     }
 
     protected function getFactoryClassData(): array
@@ -118,12 +131,29 @@ class MakeFactory extends Command
 
         $class = Str::of($blueprint)->studly();
 
+        $createSeeder = confirm(
+            label: 'Do you also want to create a seeder for the factory?',
+            yes: 'Yes, please.',
+            no: 'No, thanks.',
+            default: true,
+        );
+
         return [
             'namespace' => $namespace,
             'class' => $class,
             'definition' => new DefinitionGenerator($blueprint),
             'path' => "{$this->generatePathFromNamespace($namespace)}/{$class}Factory.php",
+            'createSeeder' => $createSeeder,
         ];
+    }
+
+    protected function generateFactoryFromStub(array $replacements): string
+    {
+        return preg_replace(
+            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
+            [$replacements['namespace'], $replacements['class'], $replacements['definition']],
+            File::get(__DIR__.'/stubs/factory.stub')
+        );
     }
 
     protected function updateDefinitionOfExistingFactory(string $fileContents, array $replacements): string
@@ -134,15 +164,6 @@ class MakeFactory extends Command
             '/public function definition\(\): array\s*{\s*return \[.*?\];\s*}/s',
             "public function definition(): array\n{\n    return $definition;\n}",
             $fileContents,
-        );
-    }
-
-    protected function generateFactoryFromStub(array $replacements): string
-    {
-        return preg_replace(
-            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
-            [$replacements['namespace'], $replacements['class'], $replacements['definition']],
-            File::get(__DIR__.'/stubs/factory.stub')
         );
     }
 
@@ -158,5 +179,14 @@ class MakeFactory extends Command
     protected function getRelativePath(string $path): string
     {
         return str_replace(base_path().'/', '', $path);
+    }
+
+    protected function saveFile(string $path, string $contents): void
+    {
+        File::ensureDirectoryExists(dirname($path));
+
+        File::put($path, $contents);
+
+        Process::run('./vendor/bin/pint '.$path);
     }
 }
