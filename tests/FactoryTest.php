@@ -40,6 +40,24 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(Entry::class, $entry);
         $this->assertSame('Michael Aerni', $entry->name);
 
+        $entries = FactoryTestEntryFactory::new()->createMany([
+            ['name' => 'Michael Aerni'],
+            ['name' => 'Jack McDade'],
+        ]);
+        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $this->assertCount(2, $entries);
+
+        $entries = FactoryTestEntryFactory::new()->createMany(2);
+        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
+
+        // TODO: This one somehow creates a nested collection. Need to investigate.
+        // $entries = FactoryTestEntryFactory::times(2)->createMany();
+        // $this->assertInstanceOf(LaravelCollection::class, $entries);
+        // $this->assertCount(2, $entries);
+        // $this->assertInstanceOf(Entry::class, $entries->first());
+
         $entries = FactoryTestEntryFactory::new()->count(2)->create();
         $this->assertInstanceOf(LaravelCollection::class, $entries);
         $this->assertCount(2, $entries);
