@@ -2,14 +2,14 @@
 
 namespace Aerni\Factory\Tests;
 
-use Statamic\Facades\Taxonomy;
-use Statamic\Facades\Collection;
 use Aerni\Factory\Factories\Factory;
+use Illuminate\Support\Collection as LaravelCollection;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry as EntryFacade;
-use Illuminate\Support\Collection as LaravelCollection;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term as TermFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
