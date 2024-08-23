@@ -40,9 +40,25 @@ abstract class Factory
         return (new static)->state($attributes)->configure();
     }
 
+    public static function times(int $count): self
+    {
+        return static::new()->count($count);
+    }
+
     public function configure(): self
     {
         return $this;
+    }
+
+    public function raw($attributes = []): array
+    {
+        if ($this->count === null) {
+            return $this->state($attributes)->getExpandedAttributes();
+        }
+
+        return array_map(function () use ($attributes) {
+            return $this->state($attributes)->getExpandedAttributes();
+        }, range(1, $this->count));
     }
 
     public function makeOne($attributes = []): Entry|Term
