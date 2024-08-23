@@ -2,20 +2,19 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Illuminate\Support\Str;
-use Statamic\Facades\Taxonomy;
-use Illuminate\Console\Command;
-use Statamic\Facades\Collection;
-use function Laravel\Prompts\info;
-use Statamic\Console\RunsInPlease;
+use Aerni\Factory\Factories\DefinitionGenerator;
 use Aerni\Factory\Factories\Factory;
-use function Laravel\Prompts\select;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Str;
+use Statamic\Console\RunsInPlease;
+use Statamic\Facades\Collection;
+use Statamic\Facades\Taxonomy;
 
 use function Laravel\Prompts\confirm;
-use Illuminate\Support\Facades\Process;
-use Aerni\Factory\Console\Commands\MakeSeeder;
-use Aerni\Factory\Factories\DefinitionGenerator;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
 
 class MakeFactory extends Command
 {
