@@ -211,20 +211,20 @@ abstract class Factory
 
     protected function modelRepository(): string
     {
-        return $this->modelNamespaceParts()['modelRepository'];
+        return $this->getModelDefinitionFromNamespace()['modelRepository'];
     }
 
     protected function modelType(): string
     {
-        return $this->modelNamespaceParts()['modelType'];
+        return $this->getModelDefinitionFromNamespace()['modelType'];
     }
 
     protected function modelBlueprint(): string
     {
-        return $this->modelNamespaceParts()['modelBlueprint'];
+        return $this->getModelDefinitionFromNamespace()['modelBlueprint'];
     }
 
-    protected function modelNamespaceParts(): array
+    protected function getModelDefinitionFromNamespace(): array
     {
         $factoryNameParts = Str::of(get_class($this))
             ->remove(static::$namespace)
