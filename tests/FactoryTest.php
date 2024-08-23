@@ -46,6 +46,14 @@ class FactoryTest extends TestCase
         $entry = FactoryTestEntryFactory::new()->createOne();
         $this->assertInstanceOf(Entry::class, $entry);
 
+        $entry = FactoryTestEntryFactory::new()->create(['name' => 'Michael Aerni']);
+        $this->assertInstanceOf(Entry::class, $entry);
+        $this->assertSame('Michael Aerni', $entry->name);
+
+        $entry = FactoryTestEntryFactory::new()->set('name', 'Michael Aerni')->create();
+        $this->assertInstanceOf(Entry::class, $entry);
+        $this->assertSame('Michael Aerni', $entry->name);
+
         $entries = FactoryTestEntryFactory::new()->count(2)->create();
         $this->assertInstanceOf(LaravelCollection::class, $entries);
         $this->assertCount(2, $entries);
