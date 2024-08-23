@@ -17,6 +17,8 @@ abstract class Factory
 
     public static string $namespace = 'Database\\Factories\\Statamic\\';
 
+    protected string $model;
+
     protected Generator $faker;
 
     public function __construct(
@@ -236,11 +238,15 @@ abstract class Factory
 
     protected function getModelDefinitionFromNamespace(): array
     {
-        $factoryNameParts = Str::of(get_class($this))
-            ->remove(static::$namespace)
-            ->remove('Factory')
-            ->lower()
-            ->explode('\\');
+        if (isset($this->model)) {
+            $factoryNameParts = str($this->model)->lower()->explode('.');
+        } else {
+            $factoryNameParts = Str::of(get_class($this))
+                ->remove(static::$namespace)
+                ->remove('Factory')
+                ->lower()
+                ->explode('\\');
+        }
 
         return [
             'modelRepository' => $factoryNameParts[0],
