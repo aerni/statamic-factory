@@ -77,6 +77,14 @@ abstract class Factory
         return $this->count(null)->create($attributes);
     }
 
+    // TODO: Add createOneQuietly()
+
+    // TODO: Add createMany()
+
+    // TODO: Add createManyQuietly()
+
+    // TODO: Add createQuietly()
+
     public function create(array $attributes = []): Collection|Entry|Term
     {
         if (! empty($attributes)) {
