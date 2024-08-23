@@ -3,9 +3,11 @@
 namespace Aerni\Factory\Factories;
 
 use Closure;
+use Faker\Generator;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 
@@ -14,6 +16,8 @@ abstract class Factory
     use DefinitionHelpers;
 
     public static string $namespace = 'Database\\Factories\\Statamic\\';
+
+    protected Generator $faker;
 
     public function __construct(
         protected ?int $count = null,
@@ -24,6 +28,7 @@ abstract class Factory
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
         $this->afterCreating ??= new Collection;
+        $this->faker = $this->withFaker();
     }
 
     abstract public function definition(): array;
@@ -207,6 +212,11 @@ abstract class Factory
         }
 
         return $term->data($attributes);
+    }
+
+    protected function withFaker()
+    {
+        return Container::getInstance()->make(Generator::class);
     }
 
     protected function modelRepository(): string
