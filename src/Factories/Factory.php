@@ -235,7 +235,7 @@ abstract class Factory
         return $this->getModelDefinitionFromNamespace()['modelType'];
     }
 
-    protected function modelBlueprint(): string
+    protected function modelBlueprint(): ?string
     {
         return $this->getModelDefinitionFromNamespace()['modelBlueprint'];
     }
@@ -255,7 +255,7 @@ abstract class Factory
         return [
             'modelRepository' => $factoryNameParts[0],
             'modelType' => $factoryNameParts[1],
-            'modelBlueprint' => $factoryNameParts[2],
+            'modelBlueprint' => $factoryNameParts[2] ?? null,
         ];
     }
 }
