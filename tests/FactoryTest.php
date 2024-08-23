@@ -2,7 +2,6 @@
 
 namespace Aerni\Factory\Tests;
 
-use Statamic\Facades\Taxonomy;
 use Aerni\Factory\Factories\Factory;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
