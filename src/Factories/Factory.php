@@ -72,6 +72,11 @@ abstract class Factory
             ->tap(fn ($instances) => $this->callAfterMaking($instances));
     }
 
+    public function createOne($attributes = []): Entry|Term
+    {
+        return $this->count(null)->create($attributes);
+    }
+
     public function create(array $attributes = []): Collection|Entry|Term
     {
         if (! empty($attributes)) {
