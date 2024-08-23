@@ -93,6 +93,19 @@ abstract class Factory
         return $this->count(null)->create($attributes);
     }
 
+    public function createMany(int|iterable|null $records = null)
+    {
+        if (is_null($records)) {
+            $records = $this->count ?? 1;
+        }
+
+        if (is_numeric($records)) {
+            $records = array_fill(0, $records, []);
+        }
+
+        return collect($records)->map(fn ($record) => $this->state($record)->create());
+    }
+
     // TODO: Add createOneQuietly()
 
     // TODO: Add createMany()
