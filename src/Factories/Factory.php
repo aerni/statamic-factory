@@ -213,7 +213,11 @@ abstract class Factory
             $term->slug($slug);
         }
 
-        return $term->data($attributes);
+        if ($locale = Arr::pull($attributes, 'locale')) {
+            return $term->in($locale)->data($attributes);
+        }
+
+        return $term->inDefaultLocale()->data($attributes);
     }
 
     protected function withFaker()
