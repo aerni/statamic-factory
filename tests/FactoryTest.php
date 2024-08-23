@@ -24,20 +24,6 @@ class FactoryTest extends TestCase
         Taxonomy::make('tags')->save();
     }
 
-    public function test_basic_entry_can_be_created(): void
-    {
-        $entry = FactoryTestEntryFactory::new()->create();
-        $this->assertInstanceOf(Entry::class, $entry);
-        $this->assertNotNull(EntryFacade::find($entry->id));
-    }
-
-    public function test_basic_term_can_be_created(): void
-    {
-        $term = FactoryTestTermFactory::new()->create();
-        $this->assertInstanceOf(Term::class, $term);
-        $this->assertNotNull(TermFacade::find($term->id));
-    }
-
     public function test_basic_model_can_be_created(): void
     {
         $entry = FactoryTestEntryFactory::new()->create();
@@ -71,6 +57,20 @@ class FactoryTest extends TestCase
         $entries = FactoryTestEntryFactory::times(1)->create();
         $this->assertInstanceOf(LaravelCollection::class, $entries);
         $this->assertCount(1, $entries);
+    }
+
+    public function test_entry_can_be_created(): void
+    {
+        $entry = FactoryTestEntryFactory::new()->create();
+        $this->assertInstanceOf(Entry::class, $entry);
+        $this->assertNotNull(EntryFacade::find($entry->id));
+    }
+
+    public function test_term_can_be_created(): void
+    {
+        $term = FactoryTestTermFactory::new()->create();
+        $this->assertInstanceOf(Term::class, $term);
+        $this->assertNotNull(TermFacade::find($term->id));
     }
 }
 
