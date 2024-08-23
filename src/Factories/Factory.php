@@ -45,10 +45,15 @@ abstract class Factory
         return $this;
     }
 
+    public function makeOne($attributes = []): Entry|Term
+    {
+        return $this->count(null)->make($attributes);
+    }
+
     public function make(array $attributes = []): Collection|Entry|Term
     {
         if (! empty($attributes)) {
-            return $this->state($attributes)->make();
+            return $this->state($attributes)->make([]);
         }
 
         if ($this->count === null) {
