@@ -162,6 +162,31 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(Entry::class, $entry);
         $this->assertSame('Michael Aerni', $entry->name);
     }
+
+    public function test_multiple_model_attributes_can_be_created()
+    {
+        $posts = FactoryTestPostFactory::new()->times(10)->raw();
+        $this->assertIsArray($posts);
+
+        $this->assertCount(10, $posts);
+    }
+
+    public function test_after_creating_and_making_callbacks_are_called()
+    {
+        $entry = FactoryTestEntryFactory::new()
+            ->afterMaking(function ($entry) {
+                $_SERVER['__test.entry.making'] = $entry;
+            })
+            ->afterCreating(function ($entry) {
+                $_SERVER['__test.entry.creating'] = $entry;
+            })
+            ->create();
+
+        $this->assertSame($entry, $_SERVER['__test.entry.making']);
+        $this->assertSame($entry, $_SERVER['__test.entry.creating']);
+
+        unset($_SERVER['__test.entry.making'], $_SERVER['__test.entry.creating']);
+    }
 }
 
 class FactoryTestEntryFactory extends Factory
