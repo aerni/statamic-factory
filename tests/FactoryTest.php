@@ -2,13 +2,13 @@
 
 namespace Aerni\Factory\Tests;
 
+use Illuminate\Support\Collection;
 use Aerni\Factory\Factories\Factory;
-use Illuminate\Support\Collection as LaravelCollection;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Collection;
+use Statamic\Facades\Collection as CollectionFacade;
 use Statamic\Facades\Entry as EntryFacade;
-use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
 use Statamic\Facades\Term as TermFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
@@ -20,8 +20,8 @@ class FactoryTest extends TestCase
     {
         parent::setUp();
 
-        Collection::make('pages')->save();
-        Taxonomy::make('tags')->save();
+        CollectionFacade::make('pages')->save();
+        TaxonomyFacade::make('tags')->save();
     }
 
     public function test_basic_model_can_be_created(): void
@@ -40,40 +40,65 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(Entry::class, $entry);
         $this->assertSame('Michael Aerni', $entry->name);
 
+        $entries = FactoryTestEntryFactory::new()->createMany();
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(1, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
+
+        $entries = FactoryTestEntryFactory::new()->createMany(2);
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
+
         $entries = FactoryTestEntryFactory::new()->createMany([
             ['name' => 'Michael Aerni'],
             ['name' => 'Jack McDade'],
         ]);
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
-        $this->assertCount(2, $entries);
-
-        $entries = FactoryTestEntryFactory::new()->createMany(2);
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $this->assertInstanceOf(Collection::class, $entries);
         $this->assertCount(2, $entries);
         $this->assertInstanceOf(Entry::class, $entries->first());
 
         $entries = FactoryTestEntryFactory::times(2)->createMany();
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $this->assertInstanceOf(Collection::class, $entries);
         $this->assertCount(2, $entries);
         $this->assertInstanceOf(Entry::class, $entries->first());
 
-        $entries = FactoryTestEntryFactory::new()->count(2)->create();
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $entries = FactoryTestEntryFactory::times(3)->createMany([
+            ['name' => 'Michael Aerni'],
+            ['name' => 'Jack McDade'],
+        ]);
+        $this->assertInstanceOf(Collection::class, $entries);
         $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
 
-        $entry = FactoryTestEntryFactory::new()->count(2)->createOne();
-        $this->assertInstanceOf(Entry::class, $entry);
-
-        $entries = FactoryTestEntryFactory::times(3)->create();
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
-        $this->assertCount(3, $entries);
+        $entries = FactoryTestEntryFactory::times(10)->create();
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(10, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
 
         $entry = FactoryTestEntryFactory::times(3)->createOne();
         $this->assertInstanceOf(Entry::class, $entry);
 
-        $entries = FactoryTestEntryFactory::times(1)->create();
-        $this->assertInstanceOf(LaravelCollection::class, $entries);
-        $this->assertCount(1, $entries);
+        $entries = FactoryTestEntryFactory::new()->count(2)->create();
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
+
+        $entry = FactoryTestEntryFactory::new()->count(2)->createOne();
+        $this->assertInstanceOf(Entry::class, $entry);
+
+        $entries = FactoryTestEntryFactory::new()->count(3)->createMany();
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(3, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
+
+        $entries = FactoryTestEntryFactory::new()->count(3)->createMany([
+            ['name' => 'Michael Aerni'],
+            ['name' => 'Jack McDade'],
+        ]);
+        $this->assertInstanceOf(Collection::class, $entries);
+        $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
     }
 
     public function test_entry_can_be_created(): void
@@ -89,6 +114,29 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(Term::class, $term);
         $this->assertNotNull(TermFacade::find($term->id));
     }
+
+    public function test_make_creates_unpersisted_model_instance()
+    {
+        $entry = FactoryTestEntryFactory::new()->makeOne();
+        $this->assertInstanceOf(Entry::class, $entry);
+
+        $entry = FactoryTestEntryFactory::new()->make(['name' => 'Michael Aerni']);
+
+        $this->assertInstanceOf(Entry::class, $entry);
+        $this->assertSame('Michael Aerni', $entry->name);
+        $this->assertCount(0, EntryFacade::all());
+    }
+
+    public function test_basic_model_attributes_can_be_created()
+    {
+        $entry = FactoryTestEntryFactory::new()->raw();
+        $this->assertIsArray($entry);
+
+        $entry = FactoryTestEntryFactory::new()->raw(['name' => 'Michael Aerni']);
+        $this->assertIsArray($entry);
+        $this->assertSame('Michael Aerni', $entry['name']);
+    }
+
 }
 
 class FactoryTestEntryFactory extends Factory
