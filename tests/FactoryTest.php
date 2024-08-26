@@ -21,6 +21,7 @@ class FactoryTest extends TestCase
         parent::setUp();
 
         CollectionFacade::make('pages')->save();
+        CollectionFacade::make('posts')->save();
         TaxonomyFacade::make('tags')->save();
     }
 
@@ -137,6 +138,16 @@ class FactoryTest extends TestCase
         $this->assertSame('Michael Aerni', $entry['name']);
     }
 
+    public function test_expanded_model_attributes_can_be_created()
+    {
+        $post = FactoryTestPostFactory::new()->raw();
+        $this->assertIsArray($post);
+
+        $post = FactoryTestPostFactory::new()->raw(['title' => 'Test Title']);
+        $this->assertIsArray($post);
+        $this->assertIsString($post['linked_entry']);
+        $this->assertSame('Test Title', $post['title']);
+    }
 }
 
 class FactoryTestEntryFactory extends Factory
@@ -159,6 +170,20 @@ class FactoryTestTermFactory extends Factory
     {
         return [
             'title' => $this->faker->sentence(),
+        ];
+    }
+}
+
+class FactoryTestPostFactory extends Factory
+{
+    protected string $model = 'collections.posts';
+
+    public function definition(): array
+    {
+        return [
+            // 'user_id' => FactoryTestUserFactory::new(), // TODO: Add support for user factory.
+            'title' => $this->faker->sentence(),
+            'linked_entry' => FactoryTestEntryFactory::new(),
         ];
     }
 }

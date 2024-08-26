@@ -26,10 +26,12 @@ abstract class Factory
         protected ?Collection $states = null,
         protected ?Collection $afterMaking = null,
         protected ?Collection $afterCreating = null,
+        protected ?Collection $recycle = null,
     ) {
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
         $this->afterCreating ??= new Collection;
+        $this->recycle ??= new Collection;
         $this->faker = $this->withFaker();
     }
 
@@ -142,20 +144,47 @@ abstract class Factory
 
     protected function getExpandedAttributes(): array
     {
-        return $this->getRawAttributes();
-
-        // return $this->expandAttributes($this->getRawAttributes($parent));
+        return $this->expandAttributes($this->getRawAttributes());
     }
 
     protected function getRawAttributes(): array
     {
         return $this->states->reduce(function (array $carry, $state) {
+            // TODO: Not sure if closures would work as an Entry can't be serialized?
+            // There's a failing test for this.
             if ($state instanceof Closure) {
                 $state = $state->bindTo($this);
             }
 
             return array_merge($carry, $state($carry));
         }, $this->definition());
+    }
+
+    protected function expandAttributes(array $definition)
+    {
+        return collect($definition)
+            ->map($evaluateRelations = function ($attribute) {
+                if ($attribute instanceof self) {
+                    $attribute = $this->getRandomRecycledModel($attribute->modelName())?->id()
+                        ?? $attribute->recycle($this->recycle)->create()->id();
+                } elseif ($attribute instanceof Entry || $attribute instanceof Term) {
+                    $attribute = $attribute->id();
+                }
+
+                return $attribute;
+            })
+            ->map(function ($attribute, $key) use (&$definition, $evaluateRelations) {
+                if (is_callable($attribute) && ! is_string($attribute) && ! is_array($attribute)) {
+                    $attribute = $attribute($definition);
+                }
+
+                $attribute = $evaluateRelations($attribute);
+
+                $definition[$key] = $attribute;
+
+                return $attribute;
+            })
+            ->all();
     }
 
     public function state(mixed $state): self
@@ -180,6 +209,24 @@ abstract class Factory
     public function count(?int $count): self
     {
         return $this->newInstance(['count' => $count]);
+    }
+
+    public function recycle($model)
+    {
+        return $this->newInstance([
+            'recycle' => $this->recycle
+                ->flatten()
+                ->merge(
+                    Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
+                        ->flatten()
+                )
+                ->groupBy($this->getModelNameFromStatamicClass(...))
+        ]);
+    }
+
+    public function getRandomRecycledModel($modelName)
+    {
+        return $this->recycle->get($modelName)?->random();
     }
 
     public function afterMaking(Closure $callback): self
@@ -217,6 +264,7 @@ abstract class Factory
             'states' => $this->states,
             'afterMaking' => $this->afterMaking,
             'afterCreating' => $this->afterCreating,
+            'recycle' => $this->recycle,
         ], $arguments)));
     }
 
@@ -304,5 +352,36 @@ abstract class Factory
             'modelType' => $factoryNameParts[1],
             'modelBlueprint' => $factoryNameParts[2] ?? null,
         ];
+    }
+
+    public function getModelNameFromStatamicClass(Entry|Term $model): string
+    {
+        return match (true) {
+            $model instanceof Entry => "collections.{$model->collectionHandle()}.{$model->blueprint()}",
+            $model instanceof Term => "collections.{$model->taxonomyHandle()}.{$model->blueprint()}",
+        };
+    }
+
+    public function modelName()
+    {
+        return implode('.', $this->getModelDefinitionFromNamespace());
+
+        // TODO: Make this work the way Laravel does it.
+
+        // $resolver = static::$modelNameResolver ?? function (self $factory) {
+        //     $namespacedFactoryBasename = Str::replaceLast(
+        //         'Factory', '', Str::replaceFirst(static::$namespace, '', get_class($factory))
+        //     );
+
+        //     $factoryBasename = Str::replaceLast('Factory', '', class_basename($factory));
+
+        //     $appNamespace = static::appNamespace();
+
+        //     return class_exists($appNamespace.'Models\\'.$namespacedFactoryBasename)
+        //                 ? $appNamespace.'Models\\'.$namespacedFactoryBasename
+        //                 : $appNamespace.$factoryBasename;
+        // };
+
+        // return $this->model ?? $resolver($this);
     }
 }
