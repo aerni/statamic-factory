@@ -52,11 +52,10 @@ class FactoryTest extends TestCase
         $this->assertCount(2, $entries);
         $this->assertInstanceOf(Entry::class, $entries->first());
 
-        // TODO: This one somehow creates a nested collection. Need to investigate.
-        // $entries = FactoryTestEntryFactory::times(2)->createMany();
-        // $this->assertInstanceOf(LaravelCollection::class, $entries);
-        // $this->assertCount(2, $entries);
-        // $this->assertInstanceOf(Entry::class, $entries->first());
+        $entries = FactoryTestEntryFactory::times(2)->createMany();
+        $this->assertInstanceOf(LaravelCollection::class, $entries);
+        $this->assertCount(2, $entries);
+        $this->assertInstanceOf(Entry::class, $entries->first());
 
         $entries = FactoryTestEntryFactory::new()->count(2)->create();
         $this->assertInstanceOf(LaravelCollection::class, $entries);
