@@ -211,6 +211,16 @@ abstract class Factory
         return $this->state(new Sequence(...$sequence));
     }
 
+    public function forEachSequence(...$sequence)
+    {
+        return $this->state(new Sequence(...$sequence))->count(count($sequence));
+    }
+
+    public function crossJoinSequence(...$sequence)
+    {
+        return $this->state(new CrossJoinSequence(...$sequence));
+    }
+
     public function count(?int $count): self
     {
         return $this->newInstance(['count' => $count]);

@@ -2,14 +2,16 @@
 
 namespace Aerni\Factory\Tests;
 
-use Aerni\Factory\Factories\Factory;
+use ReflectionClass;
 use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\Factory;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Collection as CollectionFacade;
-use Statamic\Facades\Entry as EntryFacade;
-use Statamic\Facades\Taxonomy as TaxonomyFacade;
 use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\Entry as EntryFacade;
+use Aerni\Factory\Factories\CrossJoinSequence;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Statamic\Facades\Collection as CollectionFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -186,6 +188,100 @@ class FactoryTest extends TestCase
         $this->assertSame($entry, $_SERVER['__test.entry.creating']);
 
         unset($_SERVER['__test.entry.making'], $_SERVER['__test.entry.creating']);
+    }
+
+    public function test_sequences()
+    {
+        $entries = FactoryTestEntryFactory::times(2)->sequence(
+            ['name' => 'Michael Aerni'],
+            ['name' => 'Jack McDade'],
+        )->create();
+
+        $this->assertSame('Michael Aerni', $entries[0]->name);
+        $this->assertSame('Jack McDade', $entries[1]->name);
+
+        // TODO: These test won't work because we don't support relationships yet.
+        // $user = FactoryTestUserFactory::new()
+        //     ->hasAttached(
+        //         FactoryTestRoleFactory::times(4),
+        //         new Sequence(['admin' => 'Y'], ['admin' => 'N']),
+        //         'roles'
+        //     )
+        //     ->create();
+
+        // $this->assertCount(4, $user->roles);
+
+        // $this->assertCount(2, $user->roles->filter(function ($role) {
+        //     return $role->pivot->admin === 'Y';
+        // }));
+
+        // $this->assertCount(2, $user->roles->filter(function ($role) {
+        //     return $role->pivot->admin === 'N';
+        // }));
+
+        $entries = FactoryTestEntryFactory::times(2)->sequence(function ($sequence) {
+            return ['name' => 'index: '.$sequence->index];
+        })->create();
+
+        $this->assertSame('index: 0', $entries[0]->name);
+        $this->assertSame('index: 1', $entries[1]->name);
+    }
+
+    public function test_counted_sequence()
+    {
+        $factory = FactoryTestEntryFactory::new()->forEachSequence(
+            ['name' => 'Michael Aerni'],
+            ['name' => 'Jack McDade'],
+            ['name' => 'Jesse Leite'],
+        );
+
+        $class = new ReflectionClass($factory);
+        $prop = $class->getProperty('count');
+        $value = $prop->getValue($factory);
+
+        $this->assertSame(3, $value);
+    }
+
+    public function test_cross_join_sequences()
+    {
+        $assert = function ($entries) {
+            $assertions = [
+                ['first_name' => 'Thomas', 'last_name' => 'Anderson'],
+                ['first_name' => 'Thomas', 'last_name' => 'Smith'],
+                ['first_name' => 'Agent', 'last_name' => 'Anderson'],
+                ['first_name' => 'Agent', 'last_name' => 'Smith'],
+            ];
+
+            foreach ($assertions as $key => $assertion) {
+                foreach ($assertions as $key => $assertion) {
+                    $this->assertSame(
+                        $assertion,
+                        $entries[$key]->data()->only('first_name', 'last_name')->all(),
+                    );
+                }
+            }
+        };
+
+        $entriesByClass = FactoryTestEntryFactory::times(4)
+            ->state(
+                new CrossJoinSequence(
+                    [['first_name' => 'Thomas'], ['first_name' => 'Agent']],
+                    [['last_name' => 'Anderson'], ['last_name' => 'Smith']],
+                ),
+            )
+            ->make();
+
+
+        $assert($entriesByClass);
+
+        $entriesByMethod = FactoryTestEntryFactory::times(4)
+            ->crossJoinSequence(
+                [['first_name' => 'Thomas'], ['first_name' => 'Agent']],
+                [['last_name' => 'Anderson'], ['last_name' => 'Smith']],
+            )
+            ->make();
+
+        $assert($entriesByMethod);
     }
 }
 
