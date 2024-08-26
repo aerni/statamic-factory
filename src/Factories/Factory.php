@@ -220,7 +220,7 @@ abstract class Factory
                     Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
                         ->flatten()
                 )
-                ->groupBy($this->getModelNameFromStatamicClass(...))
+                ->groupBy($this->getModelNameFromStatamicClass(...)),
         ]);
     }
 

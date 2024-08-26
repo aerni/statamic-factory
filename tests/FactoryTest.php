@@ -2,8 +2,8 @@
 
 namespace Aerni\Factory\Tests;
 
-use Illuminate\Support\Collection;
 use Aerni\Factory\Factories\Factory;
+use Illuminate\Support\Collection;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Collection as CollectionFacade;
