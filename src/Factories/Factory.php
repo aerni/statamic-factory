@@ -4,14 +4,14 @@ namespace Aerni\Factory\Factories;
 
 use Closure;
 use Faker\Generator;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\Macroable;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Illuminate\Support\Traits\Macroable;
-use Illuminate\Support\Traits\Conditionable;
 
 abstract class Factory
 {
