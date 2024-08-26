@@ -148,6 +148,20 @@ class FactoryTest extends TestCase
         $this->assertIsString($post['linked_entry']);
         $this->assertSame('Test Title', $post['title']);
     }
+
+    public function test_lazy_model_attributes_can_be_created()
+    {
+        $entryFunction = FactoryTestEntryFactory::new()->lazy();
+        $this->assertIsCallable($entryFunction);
+        $this->assertInstanceOf(Entry::class, $entryFunction());
+
+        $entryFunction = FactoryTestEntryFactory::new()->lazy(['name' => 'Michael Aerni']);
+        $this->assertIsCallable($entryFunction);
+
+        $entry = $entryFunction();
+        $this->assertInstanceOf(Entry::class, $entry);
+        $this->assertSame('Michael Aerni', $entry->name);
+    }
 }
 
 class FactoryTestEntryFactory extends Factory

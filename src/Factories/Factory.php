@@ -137,6 +137,11 @@ abstract class Factory
         return $instances;
     }
 
+    public function lazy(array $attributes = [])
+    {
+        return fn () => $this->create($attributes);
+    }
+
     protected function makeInstance(): Entry|Term
     {
         return $this->newModel($this->getExpandedAttributes());
