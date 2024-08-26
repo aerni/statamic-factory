@@ -283,6 +283,17 @@ class FactoryTest extends TestCase
         $assert($entriesByMethod);
     }
 
+    public function test_can_be_macroable()
+    {
+        $factory = FactoryTestEntryFactory::new();
+
+        $factory->macro('getFoo', function () {
+            return 'Hello World';
+        });
+
+        $this->assertSame('Hello World', $factory->getFoo());
+    }
+
     public function test_factory_can_conditionally_execute_code()
     {
         FactoryTestEntryFactory::new()
