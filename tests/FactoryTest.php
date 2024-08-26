@@ -2,16 +2,16 @@
 
 namespace Aerni\Factory\Tests;
 
-use ReflectionClass;
-use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\CrossJoinSequence;
 use Aerni\Factory\Factories\Factory;
+use Illuminate\Support\Collection;
+use ReflectionClass;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Term as TermFacade;
-use Statamic\Facades\Entry as EntryFacade;
-use Aerni\Factory\Factories\CrossJoinSequence;
-use Statamic\Facades\Taxonomy as TaxonomyFacade;
 use Statamic\Facades\Collection as CollectionFacade;
+use Statamic\Facades\Entry as EntryFacade;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Statamic\Facades\Term as TermFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -270,7 +270,6 @@ class FactoryTest extends TestCase
                 ),
             )
             ->make();
-
 
         $assert($entriesByClass);
 
