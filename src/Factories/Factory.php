@@ -8,12 +8,13 @@ use Illuminate\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 
 abstract class Factory
 {
-    use DefinitionHelpers;
+    use Conditionable, DefinitionHelpers;
 
     public static string $namespace = 'Database\\Factories\\Statamic\\';
 

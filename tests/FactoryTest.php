@@ -282,6 +282,23 @@ class FactoryTest extends TestCase
 
         $assert($entriesByMethod);
     }
+
+    public function test_factory_can_conditionally_execute_code()
+    {
+        FactoryTestEntryFactory::new()
+            ->when(true, function () {
+                $this->assertTrue(true);
+            })
+            ->when(false, function () {
+                $this->fail('Unreachable code that has somehow been reached.');
+            })
+            ->unless(false, function () {
+                $this->assertTrue(true);
+            })
+            ->unless(true, function () {
+                $this->fail('Unreachable code that has somehow been reached.');
+            });
+    }
 }
 
 class FactoryTestEntryFactory extends Factory
