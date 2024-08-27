@@ -149,7 +149,7 @@ abstract class Factory
 
     protected function makeInstance(): Entry|Term
     {
-        return $this->newModel($this->getExpandedAttributes());
+        return $this->newContentModel($this->getExpandedAttributes());
     }
 
     protected function getExpandedAttributes(): array
@@ -288,7 +288,7 @@ abstract class Factory
         ], $arguments)));
     }
 
-    public function newModel(array $attributes = []): Entry|Term
+    public function newContentModel(array $attributes = []): Entry|Term
     {
         return match (true) {
             $this->contentModelType() === 'collections' => $this->newEntry($attributes),
