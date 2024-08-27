@@ -314,7 +314,7 @@ class FactoryTest extends TestCase
 
 class FactoryTestEntryFactory extends Factory
 {
-    protected string $model = 'collections.pages';
+    protected string $contentModel = 'collections.pages.page';
 
     public function definition(): array
     {
@@ -326,7 +326,7 @@ class FactoryTestEntryFactory extends Factory
 
 class FactoryTestTermFactory extends Factory
 {
-    protected string $model = 'taxonomies.tags';
+    protected string $contentModel = 'taxonomies.tags.tag';
 
     public function definition(): array
     {
@@ -338,7 +338,7 @@ class FactoryTestTermFactory extends Factory
 
 class FactoryTestPostFactory extends Factory
 {
-    protected string $model = 'collections.posts';
+    protected string $contentModel = 'collections.posts.post';
 
     public function definition(): array
     {

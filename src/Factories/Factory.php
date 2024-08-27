@@ -3,15 +3,16 @@
 namespace Aerni\Factory\Factories;
 
 use Closure;
+use Exception;
 use Faker\Generator;
-use Illuminate\Container\Container;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Collection;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Traits\Conditionable;
 
 abstract class Factory
 {
@@ -21,7 +22,7 @@ abstract class Factory
 
     public static string $namespace = 'Database\\Factories\\Statamic\\';
 
-    protected string $model;
+    protected string $contentModel;
 
     protected Generator $faker;
 
@@ -174,7 +175,7 @@ abstract class Factory
         return collect($definition)
             ->map($evaluateRelations = function ($attribute) {
                 if ($attribute instanceof self) {
-                    $attribute = $this->getRandomRecycledModel($attribute->modelName())?->id()
+                    $attribute = $this->getRandomRecycledModel($attribute->contentModelName())?->id()
                         ?? $attribute->recycle($this->recycle)->create()->id();
                 } elseif ($attribute instanceof Entry || $attribute instanceof Term) {
                     $attribute = $attribute->id();
@@ -239,7 +240,7 @@ abstract class Factory
                     Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
                         ->flatten()
                 )
-                ->groupBy($this->getModelNameFromStatamicClass(...)),
+                ->groupBy($this->getContentModelNameFromContentClass(...)),
         ]);
     }
 
@@ -290,17 +291,17 @@ abstract class Factory
     public function newModel(array $attributes = []): Entry|Term
     {
         return match (true) {
-            $this->modelRepository() === 'collections' => $this->newEntry($attributes),
-            $this->modelRepository() === 'taxonomies' => $this->newTerm($attributes),
-            default => throw new \Exception("The repository \"{$this->modelRepository()}\" is not supported."),
+            $this->contentModelType() === 'collections' => $this->newEntry($attributes),
+            $this->contentModelType() === 'taxonomies' => $this->newTerm($attributes),
+            default => throw new \Exception("The repository \"{$this->contentModelType()}\" is not supported."),
         };
     }
 
     protected function newEntry(array $attributes = []): Entry
     {
         $entry = \Statamic\Facades\Entry::make()
-            ->collection($this->modelType())
-            ->blueprint($this->modelBlueprint());
+            ->collection($this->contentModelHandle())
+            ->blueprint($this->contentModelBlueprint());
 
         if ($slug = Arr::pull($attributes, 'slug')) {
             $entry->slug($slug);
@@ -320,8 +321,8 @@ abstract class Factory
     protected function newTerm(array $attributes = []): Term
     {
         $term = \Statamic\Facades\Term::make()
-            ->taxonomy($this->modelType())
-            ->blueprint($this->modelBlueprint());
+            ->taxonomy($this->contentModelHandle())
+            ->blueprint($this->contentModelBlueprint());
 
         if ($slug = Arr::pull($attributes, 'slug')) {
             $term->slug($slug);
@@ -339,68 +340,40 @@ abstract class Factory
         return Container::getInstance()->make(Generator::class);
     }
 
-    protected function modelRepository(): string
+    protected function contentModelType(): string
     {
-        return $this->getModelDefinitionFromNamespace()['modelRepository'];
+        return Str::before($this->contentModelName(), '.');
     }
 
-    protected function modelType(): string
+    protected function contentModelHandle(): string
     {
-        return $this->getModelDefinitionFromNamespace()['modelType'];
+        return Str::between($this->contentModelName(), '.', '.');
     }
 
-    protected function modelBlueprint(): ?string
+    protected function contentModelBlueprint(): string
     {
-        return $this->getModelDefinitionFromNamespace()['modelBlueprint'];
+        return Str::afterLast($this->contentModelName(), '.');
     }
 
-    protected function getModelDefinitionFromNamespace(): array
+    public function contentModelName(): string
     {
-        if (isset($this->model)) {
-            $factoryNameParts = str($this->model)->lower()->explode('.');
-        } else {
-            $factoryNameParts = Str::of(get_class($this))
+        $name = $this->contentModel
+            ?? str(get_class($this))
                 ->remove(static::$namespace)
                 ->remove('Factory')
                 ->lower()
-                ->explode('\\');
-        }
+                ->replace('\\', '.');
 
-        return [
-            'modelRepository' => $factoryNameParts[0],
-            'modelType' => $factoryNameParts[1],
-            'modelBlueprint' => $factoryNameParts[2] ?? null,
-        ];
+        return collect(explode('.', $name))->filter()->count() === 3
+            ? $name
+            : throw new Exception("The model name \"{$name}\" is incomplete. Make sure it follows this convention: \"{contentModelType}.{contentModelHandle}.{contentModelBlueprint}\".");
     }
 
-    public function getModelNameFromStatamicClass(Entry|Term $model): string
+    protected function getContentModelNameFromContentClass(Entry|Term $content): string
     {
         return match (true) {
-            $model instanceof Entry => "collections.{$model->collectionHandle()}.{$model->blueprint()}",
-            $model instanceof Term => "collections.{$model->taxonomyHandle()}.{$model->blueprint()}",
+            $content instanceof Entry => "collections.{$content->collectionHandle()}.{$content->blueprint()}",
+            $content instanceof Term => "taxonomies.{$content->taxonomyHandle()}.{$content->blueprint()}",
         };
-    }
-
-    public function modelName()
-    {
-        return implode('.', $this->getModelDefinitionFromNamespace());
-
-        // TODO: Make this work the way Laravel does it.
-
-        // $resolver = static::$modelNameResolver ?? function (self $factory) {
-        //     $namespacedFactoryBasename = Str::replaceLast(
-        //         'Factory', '', Str::replaceFirst(static::$namespace, '', get_class($factory))
-        //     );
-
-        //     $factoryBasename = Str::replaceLast('Factory', '', class_basename($factory));
-
-        //     $appNamespace = static::appNamespace();
-
-        //     return class_exists($appNamespace.'Models\\'.$namespacedFactoryBasename)
-        //                 ? $appNamespace.'Models\\'.$namespacedFactoryBasename
-        //                 : $appNamespace.$factoryBasename;
-        // };
-
-        // return $this->model ?? $resolver($this);
     }
 }
