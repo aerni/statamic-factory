@@ -5,6 +5,7 @@ namespace Aerni\Factory\Console\Commands;
 use Aerni\Factory\Factories\DefinitionGenerator;
 use Aerni\Factory\Factories\Factory;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Factories\Factory as FactoriesFactory;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -46,7 +47,7 @@ class MakeFactory extends Command
             : $this->handleGenerationOfNewFactory($factory);
 
         if ($factory['createSeeder']) {
-            $this->call(MakeSeeder::class, ['factory' => "{$factory['namespace']}\\{$factory['class']}"]);
+            $this->call(MakeSeeder::class, ['factory' => "{$factory['classNamespace']}\\{$factory['className']}"]);
         }
     }
 
@@ -81,42 +82,37 @@ class MakeFactory extends Command
 
     protected function getFactoryClassData(): array
     {
-        $factoryType = select(
+        $contentType = select(
             label: 'For which content type do you want to create a factory?',
             options: [
-                'entry' => 'Entry',
-                'term' => 'Term',
+                'collections' => 'Collections',
+                'taxonomies' => 'Taxonomies',
             ],
             validate: fn (string $value) => match ($value) {
-                'entry' => Collection::all()->isEmpty()
+                'collections' => Collection::all()->isEmpty()
                     ? 'You need to create at least one collection to create a factory.'
                     : null,
-                'term' => Taxonomy::all()->isEmpty()
+                'taxonomies' => Taxonomy::all()->isEmpty()
                     ? 'You need to create at least one taxonomy to create a factory.'
                     : null,
             },
         );
 
-        $models = match ($factoryType) {
-            'entry' => Collection::all(),
-            'term' => Taxonomy::all(),
+        $contentModels = match ($contentType) {
+            'collections' => Collection::all(),
+            'taxonomies' => Taxonomy::all(),
         };
 
-        $repository = match ($factoryType) {
-            'entry' => 'collections',
-            'term' => 'taxonomies',
-        };
-
-        $selectedModel = select(
-            label: 'For which '.Str::singular($repository).' do you want to create a factory?',
-            options: $models->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
+        $selectedContentModel = select(
+            label: 'For which '.Str::singular($contentType).' do you want to create a factory?',
+            options: $contentModels->mapWithKeys(fn ($contentModel) => [$contentModel->handle() => $contentModel->title()]),
         );
 
-        $model = $models->firstWhere('handle', $selectedModel);
+        $contentModel = $contentModels->firstWhere('handle', $selectedContentModel);
 
-        $blueprints = match ($factoryType) {
-            'entry' => $model->entryBlueprints(),
-            'term' => $model->termBlueprints(),
+        $blueprints = match ($contentType) {
+            'collections' => $contentModel->entryBlueprints(),
+            'taxonomies' => $contentModel->termBlueprints(),
         };
 
         $selectedBlueprint = select(
@@ -126,9 +122,9 @@ class MakeFactory extends Command
 
         $blueprint = $blueprints->firstWhere('handle', $selectedBlueprint);
 
-        $namespace = Factory::$namespace.collect([$repository, $selectedModel])->map(Str::studly(...))->implode('\\');
+        $classNamespace = Factory::$namespace.collect([$contentType, $selectedContentModel])->map(Str::studly(...))->implode('\\');
 
-        $class = Str::of($blueprint)->studly();
+        $className = str($blueprint)->studly()->append('Factory');
 
         $createSeeder = confirm(
             label: 'Do you also want to create a seeder for the factory?',
@@ -138,10 +134,10 @@ class MakeFactory extends Command
         );
 
         return [
-            'namespace' => $namespace,
-            'class' => $class,
+            'classNamespace' => $classNamespace,
+            'className' => $className,
             'definition' => new DefinitionGenerator($blueprint),
-            'path' => "{$this->generatePathFromNamespace($namespace)}/{$class}Factory.php",
+            'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
             'createSeeder' => $createSeeder,
         ];
     }
@@ -150,7 +146,7 @@ class MakeFactory extends Command
     {
         return preg_replace(
             ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
-            [$replacements['namespace'], $replacements['class'], $replacements['definition']],
+            [$replacements['classNamespace'], $replacements['className'], $replacements['definition']],
             File::get(__DIR__.'/stubs/factory.stub')
         );
     }
@@ -168,11 +164,11 @@ class MakeFactory extends Command
 
     protected function generatePathFromNamespace(string $namespace): string
     {
-        $path = collect(explode('\\', $namespace))
-            ->map(fn ($value) => Str::snake($value))
-            ->implode('/');
+        $relativePath = str($namespace)
+            ->remove('Database\\Factories\\')
+            ->replace('\\', '/');
 
-        return base_path($path);
+        return database_path("factories/{$relativePath}.php");
     }
 
     protected function getRelativePath(string $path): string

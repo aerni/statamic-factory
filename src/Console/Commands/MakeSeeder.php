@@ -55,32 +55,32 @@ class MakeSeeder extends Command
         info("The seeder was successfully created: <comment>{$this->getRelativePath($seeder['path'])}</comment>");
     }
 
-    protected function getSeederClassDataFromFactoryClass()
+    protected function getSeederClassDataFromFactoryClass(): array
     {
         $factory = $this->argument('factory');
 
         $classNamespace = Str::of($factory)->beforeLast('\\')->replace('Factories', 'Seeders');
-        $factoryClassName = Str::of($factory)->afterLast('\\')->append('Factory');
-        $factoryClassImport = "{$factory}Factory";
-        $className = Str::remove('Factory', $factoryClassName);
+        $className = Str::of($factory)->afterLast('\\')->replace('Factory', 'Seeder');
+        $factoryClassName = Str::of($factory)->afterLast('\\');
 
         return [
             'classNamespace' => $classNamespace,
             'className' => $className,
-            'factoryClassImport' => $factoryClassImport,
+            'factoryClassImport' => $factory,
             'factoryClassName' => $factoryClassName,
-            'path' => "{$this->generatePathFromNamespace($classNamespace)}/{$className}Seeder.php",
+            'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
         ];
     }
 
     protected function getSeederClassData(): array
     {
-        $factories = collect(File::allFiles(base_path('database/factories/statamic')));
+        $factories = collect(File::allFiles(database_path('factories/Statamic')));
 
-        // TODO: Show namespace, not path.
         $selectedFactory = select(
             label: 'For which factory do you want to create a seeder?',
-            options: $factories->map->getRelativePathName(),
+            options: $factories->mapWithKeys(fn ($factory) => [
+                $factory->getRelativePathname() => $this->generateNamespaceFromPath($factory->getRelativePathName())
+            ]),
         );
 
         $factory = $factories->firstWhere(fn ($factory) => $factory->getRelativePathName() === $selectedFactory);
@@ -88,14 +88,14 @@ class MakeSeeder extends Command
         $classNamespace = Str::replace('Factories', 'Seeders', $this->generateNamespaceFromPath($factory->getPath()));
         $factoryClassName = Str::remove('.php', $factory->getFilename());
         $factoryClassImport = $this->generateNamespaceFromPath($factory->getPath()).'\\'.$factoryClassName;
-        $className = Str::remove('Factory.php', $factory->getFilename());
+        $className = str($factory->getFilename())->remove('Factory.php')->append('Seeder');
 
         return [
             'classNamespace' => $classNamespace,
             'className' => $className,
             'factoryClassImport' => $factoryClassImport,
             'factoryClassName' => $factoryClassName,
-            'path' => "{$this->generatePathFromNamespace($classNamespace)}/{$className}Seeder.php",
+            'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
         ];
     }
 
@@ -110,17 +110,18 @@ class MakeSeeder extends Command
 
     protected function generatePathFromNamespace(string $namespace): string
     {
-        $path = collect(explode('\\', $namespace))
-            ->map(fn ($value) => Str::snake($value))
-            ->implode('/');
+        $relativePath = str($namespace)
+            ->remove('Database\\Seeders\\')
+            ->replace('\\', '/');
 
-        return base_path($path);
+        return database_path("seeders/{$relativePath}.php");
     }
 
     protected function generateNamespaceFromPath(string $path): string
     {
         return collect(explode('/', $this->getRelativePath($path)))
             ->map(Str::studly(...))
+            ->map(fn ($value) => Str::remove('.php', $value))
             ->implode('\\');
     }
 

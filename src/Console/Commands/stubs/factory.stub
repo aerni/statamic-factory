@@ -4,7 +4,7 @@ namespace {{ classNamespace }};
 
 use Aerni\Factory\Factories\Factory;
 
-class {{ className }}Factory extends Factory
+class {{ className }} extends Factory
 {
     /**
      * Define the model's default state.

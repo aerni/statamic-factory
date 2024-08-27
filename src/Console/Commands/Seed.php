@@ -45,8 +45,8 @@ class Seed extends Command
      */
     public function handle()
     {
-        $entryFactoryDirectory = base_path('database/factories/statamic/collections');
-        $termFactoryDirectory = base_path('database/factories/statamic/taxonomies');
+        $entryFactoryDirectory = database_path('factories/statamic/collections');
+        $termFactoryDirectory = database_path('factories/statamic/taxonomies');
 
         $this->entryFactories = File::isDirectory($entryFactoryDirectory)
             ? collect(File::allFiles($entryFactoryDirectory))

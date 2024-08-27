@@ -5,7 +5,7 @@ namespace {{ classNamespace }};
 use Illuminate\Database\Seeder;
 use {{ factoryClassImport }};
 
-class {{ className }}Seeder extends Seeder
+class {{ className }} extends Seeder
 {
     /**
      * Run the database seeds.
