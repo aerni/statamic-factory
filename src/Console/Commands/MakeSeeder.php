@@ -79,7 +79,7 @@ class MakeSeeder extends Command
         $selectedFactory = select(
             label: 'For which factory do you want to create a seeder?',
             options: $factories->mapWithKeys(fn ($factory) => [
-                $factory->getRelativePathname() => $this->generateNamespaceFromPath($factory->getRelativePathName())
+                $factory->getRelativePathname() => $this->generateNamespaceFromPath($factory->getRelativePathName()),
             ]),
         );
 

@@ -5,7 +5,6 @@ namespace Aerni\Factory\Console\Commands;
 use Aerni\Factory\Factories\DefinitionGenerator;
 use Aerni\Factory\Factories\Factory;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Factories\Factory as FactoriesFactory;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;

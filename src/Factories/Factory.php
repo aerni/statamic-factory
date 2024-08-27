@@ -5,16 +5,16 @@ namespace Aerni\Factory\Factories;
 use Closure;
 use Exception;
 use Faker\Generator;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\Macroable;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Illuminate\Support\Traits\Macroable;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Database\Eloquent\Factories\Sequence;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 
 abstract class Factory
 {
