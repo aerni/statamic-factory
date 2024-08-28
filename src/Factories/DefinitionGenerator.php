@@ -12,7 +12,7 @@ class DefinitionGenerator implements Arrayable
 
     public function toArray(): array
     {
-        return $this->mapItems($this->blueprint->fields()->items()->all());
+        return $this->processBlueprint();
     }
 
     public function __toString(): string
@@ -20,90 +20,52 @@ class DefinitionGenerator implements Arrayable
         return Utils::arrayToString($this->toArray());
     }
 
-    public function mapItems(array $items): array
+    protected function processBlueprint(): array
     {
-        return collect($items)
-            ->flatMap($this->mapFieldtypes(...))
+        return $this->blueprint->fields()->all()
+            ->reject(fn ($field) => $field->visibility() === 'computed')
+            ->map(fn ($field) => ['handle' => $field->handle(), 'field' => $field->config()])
+            ->flatMap($this->processFields(...))
             ->all();
     }
 
-    protected function mapFieldtypes(array $item): array
+    protected function processNestedFields(array $fields): array
+    {
+        return collect($fields)
+            ->flatMap($this->processFields(...))
+            ->all();
+    }
+
+    protected function processFields(array $config): array
     {
         return match (true) {
-            $item['field']['type'] === 'bard' => $this->mapBardAndReplicator($item),
-            $item['field']['type'] === 'replicator' => $this->mapBardAndReplicator($item),
-            $item['field']['type'] === 'grid' => $this->mapGrid($item),
-            $item['field']['type'] === 'table' => $this->mapTable($item),
-            default => $this->mapSimple($item),
+            $config['field']['type'] === 'bard' => $this->processBardAndReplicator($config),
+            $config['field']['type'] === 'replicator' => $this->processBardAndReplicator($config),
+            $config['field']['type'] === 'grid' => $this->processGrid($config),
+            default => [$config['handle'] => null]
         };
     }
 
-    protected function mapBardAndReplicator(array $item): array
+    protected function processBardAndReplicator(array $config): array
     {
-        $sets = collect($item['field']['sets'])->flatMap(function ($group) {
+        $fields = collect($config['field']['sets'])->flatMap(function ($group) {
             return collect($group['sets'])->map(function ($set, $key) {
-                return array_merge($this->mapItems($set['fields']), [
+                return array_merge($this->processNestedFields($set['fields']), [
                     'type' => $key,
                     'enabled' => true,
                 ]);
             });
         })->values()->all();
 
-        return [
-            $item['handle'] => $sets,
-        ];
+        return [$config['handle'] => $fields];
     }
 
-    protected function mapGrid(array $item): array
+    protected function processGrid(array $config): array
     {
-        $fields = collect($item['field']['fields'])
-            ->flatMap(fn ($item) => $this->mapItems([$item]))
+        $fields = collect($config['field']['fields'])
+            ->flatMap(fn ($config) => $this->processNestedFields([$config]))
             ->toArray();
 
-        return [
-            $item['handle'] => $fields,
-        ];
-    }
-
-    // TODO: Fix this.
-    protected function mapTable(array $item): array
-    {
-        $handle = $item['handle'];
-
-        $minRows = $item['field']['factory']['min_rows'];
-        $maxRows = $item['field']['factory']['max_rows'];
-        $minCells = $item['field']['factory']['min_cells'];
-        $maxCells = $item['field']['factory']['max_cells'];
-        $rowCount = random_int($minRows, $maxRows);
-        $cellCount = random_int($minCells, $maxCells);
-
-        $formatter = $this->formatter($item);
-
-        $table = [
-            $handle => [],
-        ];
-
-        for ($i = 0; $i < $rowCount; $i++) {
-            array_push($table[$handle], [
-                'cells' => [],
-            ]);
-        }
-
-        $table[$handle] = array_map(function ($item) use ($cellCount, $formatter) {
-            for ($i = 0; $i < $cellCount; $i++) {
-                array_push($item['cells'], $formatter);
-            }
-
-            return $item;
-        }, $table[$handle]);
-
-        return $table;
-    }
-
-    protected function mapSimple(array $item): array
-    {
-        return [
-            $item['handle'] => null,
-        ];
+        return [$config['handle'] => $fields];
     }
 }
