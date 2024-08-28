@@ -3,12 +3,12 @@
 namespace Aerni\Factory\Console\Commands;
 
 use Illuminate\Console\Command;
-use function Laravel\Prompts\select;
-
-use Statamic\Console\RunsInPlease;
-use Illuminate\Support\Facades\File;
 use Illuminate\Console\ConfirmableTrait;
+use Illuminate\Support\Facades\File;
 use SplFileInfo;
+use Statamic\Console\RunsInPlease;
+
+use function Laravel\Prompts\select;
 
 class Seed extends Command
 {
