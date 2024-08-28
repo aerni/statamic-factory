@@ -129,7 +129,7 @@ class MakeFactory extends Command
         $className = str($blueprint)->studly()->append('Factory');
 
         $createSeeder = confirm(
-            label: 'Do you also want to create a seeder for the factory?',
+            label: 'Do you also want to create a seeder for this factory?',
             yes: 'Yes, please.',
             no: 'No, thanks.',
             default: true,

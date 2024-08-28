@@ -38,10 +38,6 @@ class MakeSeeder extends Command
      */
     public function handle()
     {
-        // TODO: Automatically create a StatamicSeeder class if it doesn't exist.
-
-        // TODO: Add all Statamic seeders to that class.
-
         if (! $this->hasFactories()) {
             return info('There are no Statamic factories. To create a seeder, you need to create a factory first.');
         }
