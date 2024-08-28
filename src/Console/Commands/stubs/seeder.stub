@@ -8,7 +8,7 @@ use {{ factoryClassImport }};
 class {{ className }} extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the Statamic seeds.
      */
     public function run(): void
     {
