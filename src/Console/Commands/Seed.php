@@ -3,19 +3,16 @@
 namespace Aerni\Factory\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection as CollectionFacade;
-use Statamic\Facades\Taxonomy;
-
-use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
-use function Laravel\Prompts\text;
+
+use Statamic\Console\RunsInPlease;
+use Illuminate\Support\Facades\File;
+use Illuminate\Console\ConfirmableTrait;
+use SplFileInfo;
 
 class Seed extends Command
 {
+    use ConfirmableTrait;
     use RunsInPlease;
 
     /**
@@ -23,155 +20,71 @@ class Seed extends Command
      *
      * @var string
      */
-    protected $signature = 'statamic:seed';
+    protected $signature = 'statamic:seed
+        {--class=Database\\Seeders\\StatamicSeeder : The class name of the root seeder}
+        {--force : Force the operation to run when in production}
+    ';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Seed Statamic with entries and terms';
-
-    protected Collection $entryFactories;
-
-    protected Collection $termFactories;
-
-    protected Collection $collections;
-
-    protected Collection $taxonomies;
+    protected $description = 'Seed Statamic with content';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $entryFactoryDirectory = database_path('factories/statamic/collections');
-        $termFactoryDirectory = database_path('factories/statamic/taxonomies');
-
-        $this->entryFactories = File::isDirectory($entryFactoryDirectory)
-            ? collect(File::allFiles($entryFactoryDirectory))
-            : collect();
-
-        $this->termFactories = File::isDirectory($termFactoryDirectory)
-            ? collect(File::allFiles($termFactoryDirectory))
-            : collect();
-
-        $this->collections = CollectionFacade::all()->filter(function ($collection) {
-            return $this->entryFactories->map->getRelativePath()->contains($collection->handle());
-        });
-
-        $this->taxonomies = Taxonomy::all()->filter(function ($taxonomy) {
-            return $this->termFactories->map->getRelativePath()->contains($taxonomy->handle());
-        });
-
-        $factoryType = select(
-            label: 'Which type of content do you want to create?',
-            options: [
-                'entry' => 'Entry',
-                'term' => 'Term',
-            ],
-            validate: function (string $value) {
-                return match ($value) {
-                    'entry' => $this->collections->isEmpty()
-                        ? 'You need to create at least one entry factory.'
-                        : null,
-                    'term' => $this->taxonomies->isEmpty()
-                        ? 'You need to create at least one term factory.'
-                        : null,
-                };
-            },
-        );
-
-        $factory = $this->getFactory($factoryType);
-
-        $seeder = $this->getSeederFromFactory($factory);
-
-        if (class_exists($seeder)) {
-            $this->laravel->make($seeder)
-                ->setContainer($this->laravel)
-                ->setCommand($this)
-                ->__invoke();
-        } else {
-            $factory::new()->count($this->askForAmount())->create();
+        if (! $this->confirmToProceed()) {
+            return 1;
         }
 
-        info('The content was successfully created!');
+        $this->components->info('Seeding Statamic with content.');
+
+        $this->getSeeder()->__invoke();
+
+        return 0;
     }
 
-    protected function getFactory(string $factoryType): string
+    protected function getSeeder()
     {
-        $models = match ($factoryType) {
-            'entry' => $this->collections,
-            'term' => $this->taxonomies,
-        };
+        $class = $this->option('class');
 
-        $repository = match ($factoryType) {
-            'entry' => 'collections',
-            'term' => 'taxonomies',
-        };
+        if ($class !== 'Database\\Seeders\\StatamicSeeder') {
+            $class = $this->guessClass($class);
+        }
 
-        $selectedModel = select(
-            label: 'For which '.Str::singular($repository).' do you want to create content?',
-            options: $models->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
-        );
-
-        $factories = $this->entryFactories
-            ->filter(fn ($factory) => $factory->getRelativePath() === $selectedModel)
-            ->values();
-
-        $selectedFactory = select(
-            label: "Which {$selectedModel} factory do you want to use?",
-            options: $factories->map(fn ($factory) => $this->generateFactoryNameFromPath($factory->getFilename())),
-        );
-
-        $factory = $factories->firstWhere(fn ($factory) => $this->generateFactoryNameFromPath($factory->getFilename()) === $selectedFactory);
-
-        return Str::remove('.php', $this->generateNamespaceFromPath($factory->getPathname()));
+        return $this->laravel->make($class)
+            ->setContainer($this->laravel)
+            ->setCommand($this);
     }
 
-    protected function getSeederFromFactory(string $factory): string
+    protected function guessClass(string $class): string
     {
-        return Str::of($factory)
-            ->replace('Factories', 'Seeders')
-            ->replace('Factory', 'Seeder');
+        $files = collect(File::allFiles(database_path('seeders/Statamic')))
+            ->where(fn ($file) => str($file->getRelativePathName())->replace('/', '\\')->contains($class));
+
+        if ($files->isEmpty()) {
+            return $class;
+        }
+
+        if ($files->count() > 1) {
+            return select(
+                'Multiple seeders found. Which one do you want to run?',
+                $files->mapWithKeys(fn ($file) => [$this->getNamespaceFromFile($file) => $this->getNamespaceFromFile($file)])
+            );
+        }
+
+        return $this->getNamespaceFromFile($files->first());
     }
 
-    protected function generatePathFromNamespace(string $namespace): string
+    protected function getNamespaceFromFile(SplFileInfo $file): string
     {
-        $name = str($namespace)->finish('\\')->replaceFirst(app()->getNamespace(), '')->lower();
-
-        return base_path(str_replace('\\', '/', $name));
-    }
-
-    protected function generateNamespaceFromPath(string $path): string
-    {
-        return collect(explode('/', $this->getRelativePath($path)))
-            ->map(ucfirst(...))
-            ->implode('\\');
-    }
-
-    protected function generateFactoryNameFromPath(string $path): string
-    {
-        return Str::of($path)
-            ->afterLast('/')
-            ->remove('Factory.php');
-    }
-
-    protected function getRelativePath(string $path): string
-    {
-        return str_replace(base_path().'/', '', $path);
-    }
-
-    protected function askForAmount(): int
-    {
-        return text(
-            label: 'How many entries do you want to create?',
-            default: 1,
-            validate: fn (string $value) => match (true) {
-                ! is_numeric($value) => 'The value must be a number.',
-                $value < 1 => 'The value must be at least 1.',
-                default => null
-            }
-        );
+        return str($file->getRelativePathname())
+            ->replace('/', '\\')
+            ->prepend('Database\\Seeders\\Statamic\\')
+            ->remove('.php');
     }
 }
