@@ -35,7 +35,7 @@ class MakeFactory extends Command
      *
      * @var string
      */
-    protected $description = 'Create a new Statamic factory class';
+    protected $description = 'Create a new Statamic factory';
 
     /**
      * Execute the console command.
