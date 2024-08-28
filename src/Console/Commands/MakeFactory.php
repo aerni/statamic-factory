@@ -2,20 +2,22 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
-use Aerni\Factory\Console\Commands\Concerns\SavesFile;
-use Aerni\Factory\Factories\DefinitionGenerator;
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
-
-use function Laravel\Prompts\confirm;
+use Illuminate\Console\Command;
+use Statamic\Facades\Collection;
 use function Laravel\Prompts\info;
+use Statamic\Console\RunsInPlease;
+use Aerni\Factory\Factories\Factory;
 use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\File;
+use function Laravel\Prompts\confirm;
+
+use Statamic\Events\EntryBlueprintFound;
+use Aerni\Factory\Factories\DefinitionGenerator;
+use Aerni\Factory\Console\Commands\Concerns\SavesFile;
+use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Statamic\Events\TermBlueprintFound;
 
 class MakeFactory extends Command
 {
@@ -124,6 +126,8 @@ class MakeFactory extends Command
 
         $blueprint = $blueprints->firstWhere('handle', $selectedBlueprint);
 
+        $this->fireBlueprintEvent($blueprint);
+
         $classNamespace = Factory::$namespace.collect([$contentType, $selectedContentModel])->map(Str::studly(...))->implode('\\');
 
         $className = str($blueprint)->studly()->append('Factory');
@@ -142,6 +146,15 @@ class MakeFactory extends Command
             'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
             'createSeeder' => $createSeeder,
         ];
+    }
+
+    protected function fireBlueprintEvent($blueprint): void
+    {
+        match (true) {
+            Str::contains($blueprint->namespace(), 'collections') => EntryBlueprintFound::dispatch($blueprint),
+            Str::contains($blueprint->namespace(), 'taxonomies') => TermBlueprintFound::dispatch($blueprint),
+            default => null,
+        };
     }
 
     protected function generateFactoryFromStub(array $replacements): string
