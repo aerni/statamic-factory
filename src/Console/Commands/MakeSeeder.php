@@ -7,10 +7,11 @@ use Aerni\Factory\Console\Commands\Concerns\SavesFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Statamic\Console\RunsInPlease;
+
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
-use Statamic\Console\RunsInPlease;
 
 class MakeSeeder extends Command
 {
