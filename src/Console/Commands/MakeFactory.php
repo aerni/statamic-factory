@@ -2,23 +2,25 @@
 
 namespace Aerni\Factory\Console\Commands;
 
+use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Aerni\Factory\Console\Commands\Concerns\SavesFile;
 use Aerni\Factory\Factories\DefinitionGenerator;
 use Aerni\Factory\Factories\Factory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\select;
-
 class MakeFactory extends Command
 {
+    use GetsRelativePath;
     use RunsInPlease;
+    use SavesFile;
 
     /**
      * The name and signature of the console command.
@@ -168,19 +170,5 @@ class MakeFactory extends Command
             ->replace('\\', '/');
 
         return database_path("factories/{$relativePath}.php");
-    }
-
-    protected function getRelativePath(string $path): string
-    {
-        return str_replace(base_path().'/', '', $path);
-    }
-
-    protected function saveFile(string $path, string $contents): void
-    {
-        File::ensureDirectoryExists(dirname($path));
-
-        File::put($path, $contents);
-
-        Process::run('./vendor/bin/pint '.$path);
     }
 }

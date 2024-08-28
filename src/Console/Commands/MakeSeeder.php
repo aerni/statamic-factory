@@ -2,19 +2,21 @@
 
 namespace Aerni\Factory\Console\Commands;
 
+use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Aerni\Factory\Console\Commands\Concerns\SavesFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
+use Statamic\Console\RunsInPlease;
 
 class MakeSeeder extends Command
 {
+    use GetsRelativePath;
     use RunsInPlease;
+    use SavesFile;
 
     /**
      * The name and signature of the console command.
@@ -35,8 +37,12 @@ class MakeSeeder extends Command
      */
     public function handle()
     {
+        if (! $this->hasFactories()) {
+            return info('There are no Statamic factories. To create a seeder, you need to create a factory first.');
+        }
+
         $seeder = $this->argument('factory')
-            ? $this->getSeederClassDataFromFactoryClass()
+            ? $this->getSeederClassDataFromFactory($this->argument('factory'))
             : $this->getSeederClassData();
 
         if (File::exists($seeder['path']) && ! confirm(
@@ -55,10 +61,8 @@ class MakeSeeder extends Command
         info("The seeder was successfully created: <comment>{$this->getRelativePath($seeder['path'])}</comment>");
     }
 
-    protected function getSeederClassDataFromFactoryClass(): array
+    protected function getSeederClassDataFromFactory(string $factory): array
     {
-        $factory = $this->argument('factory');
-
         $classNamespace = Str::of($factory)->beforeLast('\\')->replace('Factories', 'Seeders');
         $className = Str::of($factory)->afterLast('\\')->replace('Factory', 'Seeder');
         $factoryClassName = Str::of($factory)->afterLast('\\');
@@ -125,17 +129,9 @@ class MakeSeeder extends Command
             ->implode('\\');
     }
 
-    protected function getRelativePath(string $path): string
+    protected function hasFactories(): bool
     {
-        return str_replace(base_path().'/', '', $path);
-    }
-
-    protected function saveFile(string $path, string $contents): void
-    {
-        File::ensureDirectoryExists(dirname($path));
-
-        File::put($path, $contents);
-
-        Process::run('./vendor/bin/pint '.$path);
+        return File::isDirectory(database_path('factories/Statamic'))
+            && ! empty(File::allFiles(database_path('factories/Statamic')));
     }
 }
