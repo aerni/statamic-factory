@@ -5,16 +5,18 @@ namespace Aerni\Factory\Factories;
 use Closure;
 use Exception;
 use Faker\Generator;
-use Illuminate\Container\Container;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Database\Eloquent\Factories\Sequence;
+use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Collection;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
+use Illuminate\Support\Facades\Config;
 use Statamic\Contracts\Taxonomies\Term;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 
 abstract class Factory
 {
@@ -117,8 +119,6 @@ abstract class Factory
 
     // TODO: Add createOneQuietly()
 
-    // TODO: Add createMany()
-
     // TODO: Add createManyQuietly()
 
     // TODO: Add createQuietly()
@@ -161,15 +161,17 @@ abstract class Factory
 
     protected function getRawAttributes(): array
     {
-        return $this->states->reduce(function (array $carry, $state) {
-            // TODO: Not sure if closures would work as an Entry can't be serialized?
-            // There's a failing test for this.
+        $definition = $this->states->reduce(function (array $carry, $state) {
             if ($state instanceof Closure) {
                 $state = $state->bindTo($this);
             }
 
             return array_merge($carry, $state($carry));
         }, $this->definition());
+
+        $this->faker = $this->withFaker(Arr::get($definition, 'site'));
+
+        return array_merge($definition, $this->definition());
     }
 
     protected function expandAttributes(array $definition)
@@ -231,6 +233,24 @@ abstract class Factory
     public function count(?int $count): self
     {
         return $this->newInstance(['count' => $count]);
+    }
+
+    public function site(string $site): self
+    {
+        return match ($site) {
+            'random' => $this->sequence(fn (Sequence $sequence) => ['site' => $this->getSitesFromContentModel()->random()]),
+            default => $this->set('site', $site),
+        };
+    }
+
+    protected function getSitesFromContentModel(): Collection
+    {
+        $contentModel = $this->newContentModel();
+
+        return match (true) {
+            $contentModel instanceof Entry => $contentModel->sites(),
+            $contentModel instanceof Term => $contentModel->taxonomy()->sites(),
+        };
     }
 
     public function recycle($model)
@@ -309,13 +329,11 @@ abstract class Factory
             $entry->slug($slug);
         }
 
-        if ($locale = Arr::pull($attributes, 'locale')) {
-            $entry->locale($locale);
+        if (($site = Arr::pull($attributes, 'site')) && $entry->sites()->contains($site)) {
+            $entry->locale($site);
         }
 
-        if ($published = Arr::pull($attributes, 'published')) {
-            $entry->published($published);
-        }
+        $entry->published(Arr::pull($attributes, 'published'));
 
         return $entry->data($attributes);
     }
@@ -330,16 +348,23 @@ abstract class Factory
             $term->slug($slug);
         }
 
-        if ($locale = Arr::pull($attributes, 'locale')) {
-            return $term->in($locale)->data($attributes);
+        if (($site = Arr::pull($attributes, 'site')) && $term->taxonomy()->sites()->contains($site)) {
+            $localizedTerm = $term->in($site);
+        } else {
+            $localizedTerm = $term->inDefaultLocale();
         }
 
-        return $term->inDefaultLocale()->data($attributes);
+        return $localizedTerm->data($attributes)->term();
     }
 
-    protected function withFaker()
+    protected function withFaker(?string $site = null): Generator
     {
-        return Container::getInstance()->make(Generator::class);
+        return Container::getInstance()->makeWith(Generator::class, ['locale' => $this->getLocaleFromSite($site)]);
+    }
+
+    protected function getLocaleFromSite(?string $site = null): string
+    {
+        return Site::get($site)?->locale() ?? Site::default()->locale();
     }
 
     protected function contentModelType(): string
