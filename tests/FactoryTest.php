@@ -2,16 +2,17 @@
 
 namespace Aerni\Factory\Tests;
 
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Support\Collection;
 use ReflectionClass;
+use Statamic\Facades\Site;
+use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\Factory;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Collection as CollectionFacade;
+use Statamic\Facades\Term as TermFacade;
 use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Facades\Taxonomy as TaxonomyFacade;
-use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\Collection as CollectionFacade;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -22,8 +23,21 @@ class FactoryTest extends TestCase
     {
         parent::setUp();
 
-        CollectionFacade::make('pages')->save();
-        CollectionFacade::make('posts')->save();
+        Site::setSites([
+            'default' => [
+                'name' => 'English',
+                'url' => '/',
+                'locale' => 'en_US',
+            ],
+            'german' => [
+                'name' => 'German',
+                'url' => '/de/',
+                'locale' => 'de_DE',
+            ],
+        ]);
+
+        CollectionFacade::make('pages')->sites(['default', 'german'])->save();
+        CollectionFacade::make('posts')->sites(['default', 'german'])->save();
         TaxonomyFacade::make('tags')->save();
     }
 
@@ -319,7 +333,7 @@ class FactoryTestEntryFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->sentence(),
+            'title' => $this->faker->realText(20),
         ];
     }
 }
@@ -331,7 +345,7 @@ class FactoryTestTermFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->sentence(),
+            'title' => $this->faker->realText(20),
         ];
     }
 }
@@ -344,7 +358,7 @@ class FactoryTestPostFactory extends Factory
     {
         return [
             // 'user_id' => FactoryTestUserFactory::new(), // TODO: Add support for user factory.
-            'title' => $this->faker->sentence(),
+            'title' => $this->faker->realText(20),
             'linked_entry' => FactoryTestEntryFactory::new(),
         ];
     }
