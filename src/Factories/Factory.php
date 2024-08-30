@@ -363,17 +363,32 @@ abstract class Factory
             ->taxonomy($this->contentModelHandle())
             ->blueprint($this->contentModelBlueprint());
 
-        if ($slug = Arr::pull($attributes, 'slug')) {
-            $term->slug($slug);
+        $site = Arr::pull($attributes, 'site');
+        $published = Arr::pull($attributes, 'published', true);
+        $slug = Arr::pull($attributes, 'slug');
+
+        /**
+         * If the term is *not* being created in the default site, we'll copy all the
+         * appropriate values into the default localization since it needs to exist.
+         */
+        if ($site !== $term->defaultLocale()) {
+            $term
+                ->inDefaultLocale()
+                ->published($published)
+                ->slug($slug)
+                ->data($attributes);
         }
 
-        if (($site = Arr::pull($attributes, 'site')) && $term->taxonomy()->sites()->contains($site)) {
-            $localizedTerm = $term->in($site);
-        } else {
-            $localizedTerm = $term->inDefaultLocale();
+        /* Ensure we only create localizations for sites that are configured on the taxonomy. */
+        if ($term->taxonomy()->sites()->contains($site)) {
+            $term
+                ->in($site)
+                ->published($published)
+                ->slug($slug)
+                ->data($attributes);
         }
 
-        return $localizedTerm->data($attributes)->term();
+        return $term;
     }
 
     protected function withFaker(?string $locale = null): Generator
