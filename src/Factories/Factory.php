@@ -341,7 +341,7 @@ abstract class Factory
             $entry->locale($site);
         }
 
-        $entry->published(Arr::pull($attributes, 'published'));
+        $entry->published(Arr::pull($attributes, 'published', true));
 
         return $entry->data($attributes);
     }
