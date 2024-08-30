@@ -83,7 +83,7 @@ abstract class Factory
         }
 
         if ($this->count === null) {
-            return tap($this->makeInstance(), function ($instance) {
+            return tap($this->state($attributes)->makeInstance(), function ($instance) {
                 $this->callAfterMaking(collect([$instance]));
             });
         }
@@ -92,10 +92,13 @@ abstract class Factory
             return collect();
         }
 
-        return collect()
-            ->range(1, $this->count)
-            ->map(fn () => $this->makeInstance())
-            ->tap(fn ($instances) => $this->callAfterMaking($instances));
+        $instances = collect(array_map(function () use ($attributes) {
+            return $this->state($attributes)->makeInstance();
+        }, range(1, $this->count)));
+
+        $this->callAfterMaking($instances);
+
+        return $instances;
     }
 
     public function createOne($attributes = []): Entry|Term
@@ -161,7 +164,7 @@ abstract class Factory
     protected function getRawAttributes(): array
     {
         return $this->states
-            ->tap($this->setFakerLocaleAccordingToSite(...))
+            ->pipe($this->getSiteFromStatesAndSetFakerLocaleAccordingly(...))
             ->reduce(function (array $carry, $state) {
                 if ($state instanceof Closure) {
                     $state = $state->bindTo($this);
@@ -171,15 +174,26 @@ abstract class Factory
             }, $this->definition());
     }
 
-    protected function setFakerLocaleAccordingToSite(): void
+    protected function getSiteFromStatesAndSetFakerLocaleAccordingly(Collection $states): Collection
     {
-        $site = $this->states
-            ->flatMap(fn ($state) => (clone $state)())
-            ->get('site');
+        $evaluatedClosure = $states
+            ->map(fn ($state) => (clone $state)()) /* Clone the closure so that we don't run into issues when evaluating the same closure later. Needed for sequences to work correctly.  */
+            ->filter(fn ($state) => isset($state['site']))
+            ->flatMap(fn ($state, $index) => array_merge(['index' => $index], $state));
+
+        $site = $evaluatedClosure->get('site');
+
+        /**
+         * Replace the unevaluated site closure with one that contains the evaluated site.
+         * This ensures that we'll save the content in the same site that we are using for Faker.
+         */
+        $states = $states->put($evaluatedClosure->get('index'), fn () => ['site' => $site]);
 
         $locale = Site::get($site)?->locale() ?? Site::default()->locale();
 
         $this->faker = $this->withFaker($locale);
+
+        return $states;
     }
 
     protected function expandAttributes(array $definition)
