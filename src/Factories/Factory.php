@@ -5,17 +5,19 @@ namespace Aerni\Factory\Factories;
 use Closure;
 use Exception;
 use Faker\Generator;
-use Illuminate\Container\Container;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Database\Eloquent\Factories\Sequence;
+use ReflectionClass;
+use ReflectionFunction;
+use Statamic\Facades\Site;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Collection;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Site;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 
 abstract class Factory
 {
@@ -158,22 +160,28 @@ abstract class Factory
         return $this->expandAttributes($this->getRawAttributes());
     }
 
-    /**
-     * TODO: Overriding of attributes doesn't work anymore.
-     * Need to find a way to see if there's a site attribute in the states, then set the faker to that site.
-     * And then evaluate all the states.
-     */
     protected function getRawAttributes(): array
     {
-        $definition = $this->states->reduce(function (array $carry, $state) {
-            if ($state instanceof Closure) {
-                $state = $state->bindTo($this);
-            }
+        return $this->states
+            ->tap($this->setFakerLocaleAccordingToSite(...))
+            ->reduce(function (array $carry, $state) {
+                if ($state instanceof Closure) {
+                    $state = $state->bindTo($this);
+                }
 
-            return array_merge($carry, $state($carry));
-        }, $this->definition());
+                return array_merge($carry, $state($carry));
+            }, $this->definition());
+    }
 
-        return $definition;
+    protected function setFakerLocaleAccordingToSite(): void
+    {
+        $site = $this->states
+            ->flatMap(fn ($state) => (clone $state)())
+            ->get('site');
+
+        $locale = Site::get($site)?->locale() ?? Site::default()->locale();
+
+        $this->faker = $this->withFaker($locale);
     }
 
     protected function expandAttributes(array $definition)
@@ -368,14 +376,9 @@ abstract class Factory
         return $localizedTerm->data($attributes)->term();
     }
 
-    protected function withFaker(?string $site = null): Generator
+    protected function withFaker(?string $locale = null): Generator
     {
-        return Container::getInstance()->makeWith(Generator::class, ['locale' => $this->getLocaleFromSite($site)]);
-    }
-
-    protected function getLocaleFromSite(?string $site = null): string
-    {
-        return Site::get($site)?->locale() ?? Site::default()->locale();
+        return Container::getInstance()->makeWith(Generator::class, ['locale' => $locale]);
     }
 
     protected function contentModelType(): string
