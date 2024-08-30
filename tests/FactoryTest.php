@@ -13,6 +13,7 @@ use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Facades\Taxonomy as TaxonomyFacade;
 use Statamic\Facades\Collection as CollectionFacade;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
+use Illuminate\Support\Facades\Config;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -22,6 +23,8 @@ class FactoryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Config::set('statamic.system.multisite', true);
 
         Site::setSites([
             'default' => [
@@ -34,11 +37,11 @@ class FactoryTest extends TestCase
                 'url' => '/de/',
                 'locale' => 'de_DE',
             ],
-        ]);
+        ])->save();
 
         CollectionFacade::make('pages')->sites(['default', 'german'])->save();
         CollectionFacade::make('posts')->sites(['default', 'german'])->save();
-        TaxonomyFacade::make('tags')->save();
+        TaxonomyFacade::make('tags')->sites(['default', 'german'])->save();
     }
 
     public function test_basic_model_can_be_created(): void
@@ -323,6 +326,27 @@ class FactoryTest extends TestCase
             ->unless(true, function () {
                 $this->fail('Unreachable code that has somehow been reached.');
             });
+    }
+
+    public function test_entry_can_be_created_in_site()
+    {
+        $entry = FactoryTestEntryFactory::new()->site('german')->create();
+        $this->assertSame('german', $entry->locale());
+
+        $entry = FactoryTestEntryFactory::new()->site('nonexsiting_site')->create();
+        $this->assertSame('default', $entry->locale());
+
+        $entries = FactoryTestEntryFactory::times(10)->site('random')->create();
+        $entries->each(fn ($entry) => $this->assertContains($entry->locale(), ['default', 'german']));
+    }
+
+    public function test_term_can_be_created_in_site()
+    {
+        $term = FactoryTestTermFactory::new()->site('german')->create();
+        $this->assertSame($term->localizations()->keys()->all(), ['default', 'german']);
+
+        $term = FactoryTestTermFactory::new()->site('nonexsiting_site')->create();
+        $this->assertNotContains($term->localizations()->keys()->all(), ['nonexsiting_site']);
     }
 }
 
