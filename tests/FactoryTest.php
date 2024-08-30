@@ -348,6 +348,24 @@ class FactoryTest extends TestCase
         $term = FactoryTestTermFactory::new()->site('nonexsiting_site')->create();
         $this->assertNotContains($term->localizations()->keys()->all(), ['nonexsiting_site']);
     }
+
+    public function test_can_set_publish_state()
+    {
+        $entry = FactoryTestEntryFactory::new()->published(true)->create();
+        $this->assertSame(true, $entry->published());
+
+        $entry = FactoryTestEntryFactory::new()->published(false)->create();
+        $this->assertSame(false, $entry->published());
+
+        $entry = FactoryTestEntryFactory::new()->published('false')->create();
+        $this->assertSame(false, $entry->published());
+
+        $entry = FactoryTestEntryFactory::new()->site('random')->create();
+        $this->assertContains($entry->published(), [true, false]);
+
+        $entry = FactoryTestEntryFactory::new()->site('anything')->create();
+        $this->assertSame(true, $entry->published());
+    }
 }
 
 class FactoryTestEntryFactory extends Factory
