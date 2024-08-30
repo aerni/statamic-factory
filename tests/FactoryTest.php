@@ -108,14 +108,14 @@ class FactoryTest extends TestCase
     {
         $entry = FactoryTestEntryFactory::new()->create();
         $this->assertInstanceOf(Entry::class, $entry);
-        $this->assertNotNull(EntryFacade::find($entry->id));
+        $this->assertNotNull(EntryFacade::find($entry->id()));
     }
 
     public function test_term_can_be_created(): void
     {
         $term = FactoryTestTermFactory::new()->create();
         $this->assertInstanceOf(Term::class, $term);
-        $this->assertNotNull(TermFacade::find($term->id));
+        $this->assertNotNull(TermFacade::find($term->id()));
     }
 
     public function test_make_creates_unpersisted_model_instance()
