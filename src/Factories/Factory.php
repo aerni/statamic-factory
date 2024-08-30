@@ -158,6 +158,11 @@ abstract class Factory
         return $this->expandAttributes($this->getRawAttributes());
     }
 
+    /**
+     * TODO: Overriding of attributes doesn't work anymore.
+     * Need to find a way to see if there's a site attribute in the states, then set the faker to that site.
+     * And then evaluate all the states.
+     */
     protected function getRawAttributes(): array
     {
         $definition = $this->states->reduce(function (array $carry, $state) {
@@ -168,9 +173,7 @@ abstract class Factory
             return array_merge($carry, $state($carry));
         }, $this->definition());
 
-        $this->faker = $this->withFaker(Arr::get($definition, 'site'));
-
-        return array_merge($definition, $this->definition());
+        return $definition;
     }
 
     protected function expandAttributes(array $definition)
