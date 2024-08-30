@@ -243,6 +243,15 @@ abstract class Factory
         };
     }
 
+    public function published(bool|string $published): self
+    {
+        return match ($published) {
+            'random' => $this->sequence(fn (Sequence $sequence) => ['published' => collect([true, false])->random()]),
+            false, 'false' => $this->set('published', false),
+            default => $this->set('published', true),
+        };
+    }
+
     protected function getSitesFromContentModel(): Collection
     {
         $contentModel = $this->newContentModel();
