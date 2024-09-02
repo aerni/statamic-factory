@@ -29,14 +29,17 @@ abstract class Factory
 
     protected Generator $faker;
 
+    protected ?Sequence $siteSequence = null;
+
     public function __construct(
         protected ?int $count = null,
+        protected ?string $site = null,
         protected ?Collection $states = null,
         protected ?Collection $afterMaking = null,
         protected ?Collection $afterCreating = null,
         protected ?Collection $recycle = null,
-        protected bool $randomSite = false,
     ) {
+        $this->site ??= $this->getDefaultSiteFromContentModel();
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
         $this->afterCreating ??= new Collection;
@@ -64,11 +67,11 @@ abstract class Factory
     public function raw($attributes = []): array
     {
         if ($this->count === null) {
-            return $this->state($attributes)->getExpandedAttributes();
+            return $this->evaluateSite()->state($attributes)->getExpandedAttributes();
         }
 
         return array_map(function () use ($attributes) {
-            return $this->state($attributes)->getExpandedAttributes();
+            return $this->evaluateSite()->state($attributes)->getExpandedAttributes();
         }, range(1, $this->count));
     }
 
@@ -84,7 +87,7 @@ abstract class Factory
         }
 
         if ($this->count === null) {
-            return tap($this->state($attributes)->makeInstance(), function ($instance) {
+            return tap($this->evaluateSite()->state($attributes)->makeInstance(), function ($instance) {
                 $this->callAfterMaking(collect([$instance]));
             });
         }
@@ -94,7 +97,7 @@ abstract class Factory
         }
 
         $instances = collect(array_map(function () use ($attributes) {
-            return $this->state($attributes)->makeInstance();
+            return $this->evaluateSite()->state($attributes)->makeInstance();
         }, range(1, $this->count)));
 
         $this->callAfterMaking($instances);
@@ -165,7 +168,6 @@ abstract class Factory
     protected function getRawAttributes(): array
     {
         return $this->states
-            ->pipe($this->getSiteFromStatesAndSetFakerLocaleAccordingly(...))
             ->reduce(function (array $carry, $state) {
                 if ($state instanceof Closure) {
                     $state = $state->bindTo($this);
@@ -173,31 +175,6 @@ abstract class Factory
 
                 return array_merge($carry, $state($carry));
             }, $this->definition());
-    }
-
-    protected function getSiteFromStatesAndSetFakerLocaleAccordingly(Collection $states): Collection
-    {
-        $evaluatedClosure = $states
-            ->map(fn ($state) => (clone $state)()) /* Clone the closure so that we don't run into issues when evaluating the same closure later. Needed for sequences to work correctly.  */
-            ->filter(fn ($state) => isset($state['site']))
-            ->flatMap(fn ($state, $index) => array_merge(['index' => $index], $state));
-
-        $site = $evaluatedClosure->get('site');
-
-        /**
-         * This should only be applied when using "random" as the site.
-         * Replace the unevaluated site closure with one that contains the evaluated site.
-         * This ensures that we'll save the content in the same site that we are using for Faker.
-         */
-        if ($this->randomSite) {
-            $states = $states->put($evaluatedClosure->get('index'), fn () => ['site' => $site]);
-        }
-
-        $locale = Site::get($site)?->locale() ?? Site::default()->locale();
-
-        $this->faker = $this->withFaker($locale);
-
-        return $states;
     }
 
     protected function expandAttributes(array $definition)
@@ -263,17 +240,18 @@ abstract class Factory
 
     public function site(string $site): self
     {
-        if ($site === 'random') {
-            $this->randomSite = true;
-        }
+        return $this->newInstance(['site' => $site]);
+    }
 
-        return match ($site) {
-            'sequence' => $this->state(new Sequence(
-                ... $this->getSitesFromContentModel()->map(fn ($site) => ['site' => $site])->all()
-            )),
-            'random' => $this->sequence(fn (Sequence $sequence) => ['site' => $this->getSitesFromContentModel()->random()]),
-            default => $this->set('site', $site),
-        };
+    // TODO: Ensure we are applying this correctly wherever necessary.
+    protected function evaluateSite(): self
+    {
+        return $this->site(match (true) {
+            $this->getSitesFromContentModel()->contains($this->site) => $this->site,
+            $this->site === 'random' => $this->getSitesFromContentModel()->random(),
+            $this->site === 'sequence' => once(fn () => new Sequence(... $this->getSitesFromContentModel()))(),
+            default => $this->getDefaultSiteFromContentModel(),
+        });
     }
 
     public function published(bool|string $published): self
@@ -292,6 +270,16 @@ abstract class Factory
         return match (true) {
             $contentModel instanceof Entry => $contentModel->sites(),
             $contentModel instanceof Term => $contentModel->taxonomy()->sites(),
+        };
+    }
+
+    protected function getDefaultSiteFromContentModel(): string
+    {
+        $contentModel = $this->newContentModel();
+
+        return match (true) {
+            $contentModel instanceof Entry => $contentModel->locale(),
+            $contentModel instanceof Term => $contentModel->defaultLocale(),
         };
     }
 
@@ -345,11 +333,11 @@ abstract class Factory
     {
         return new static(...array_values(array_merge([
             'count' => $this->count,
+            'site' => $this->site,
             'states' => $this->states,
             'afterMaking' => $this->afterMaking,
             'afterCreating' => $this->afterCreating,
             'recycle' => $this->recycle,
-            'randomSite' => $this->randomSite,
         ], $arguments)));
     }
 
@@ -372,8 +360,8 @@ abstract class Factory
             $entry->slug($slug);
         }
 
-        if (($site = Arr::pull($attributes, 'site')) && $entry->sites()->contains($site)) {
-            $entry->locale($site);
+        if ($entry->sites()->contains($this->site)) {
+            $entry->locale($this->site);
         }
 
         $entry->published(Arr::pull($attributes, 'published', true));
@@ -387,7 +375,6 @@ abstract class Factory
             ->taxonomy($this->contentModelHandle())
             ->blueprint($this->contentModelBlueprint());
 
-        $site = Arr::pull($attributes, 'site');
         $published = Arr::pull($attributes, 'published', true);
         $slug = Arr::pull($attributes, 'slug');
 
@@ -395,7 +382,7 @@ abstract class Factory
          * If the term is *not* being created in the default site, we'll copy all the
          * appropriate values into the default localization since it needs to exist.
          */
-        if ($site !== $term->defaultLocale()) {
+        if ($this->site !== $term->defaultLocale()) {
             $term
                 ->inDefaultLocale()
                 ->published($published)
@@ -404,9 +391,9 @@ abstract class Factory
         }
 
         /* Ensure we only create localizations for sites that are configured on the taxonomy. */
-        if ($term->taxonomy()->sites()->contains($site)) {
+        if ($term->taxonomy()->sites()->contains($this->site)) {
             $term
-                ->in($site)
+                ->in($this->site)
                 ->published($published)
                 ->slug($slug)
                 ->data($attributes);
@@ -415,8 +402,10 @@ abstract class Factory
         return $term;
     }
 
-    protected function withFaker(?string $locale = null): Generator
+    protected function withFaker(): Generator
     {
+        $locale = Site::get($this->site)?->locale() ?? Site::default()->locale();
+
         return Container::getInstance()->makeWith(Generator::class, ['locale' => $locale]);
     }
 
