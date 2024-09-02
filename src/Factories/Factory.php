@@ -249,7 +249,7 @@ abstract class Factory
         return $this->site(match (true) {
             $this->getSitesFromContentModel()->contains($this->site) => $this->site,
             $this->site === 'random' => $this->getSitesFromContentModel()->random(),
-            $this->site === 'sequence' => once(fn () => new Sequence(... $this->getSitesFromContentModel()))(),
+            $this->site === 'sequence' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(),
             default => $this->getDefaultSiteFromContentModel(),
         });
     }
