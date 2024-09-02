@@ -29,8 +29,6 @@ abstract class Factory
 
     protected Generator $faker;
 
-    protected ?Sequence $siteSequence = null;
-
     public function __construct(
         protected ?int $count = null,
         protected ?string $site = null,
