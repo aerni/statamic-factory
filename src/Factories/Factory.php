@@ -35,6 +35,7 @@ abstract class Factory
         protected ?Collection $afterMaking = null,
         protected ?Collection $afterCreating = null,
         protected ?Collection $recycle = null,
+        protected bool $randomSite = false,
     ) {
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
@@ -184,10 +185,13 @@ abstract class Factory
         $site = $evaluatedClosure->get('site');
 
         /**
+         * This should only be applied when using "random" as the site.
          * Replace the unevaluated site closure with one that contains the evaluated site.
          * This ensures that we'll save the content in the same site that we are using for Faker.
          */
-        $states = $states->put($evaluatedClosure->get('index'), fn () => ['site' => $site]);
+        if ($this->randomSite) {
+            $states = $states->put($evaluatedClosure->get('index'), fn () => ['site' => $site]);
+        }
 
         $locale = Site::get($site)?->locale() ?? Site::default()->locale();
 
@@ -259,7 +263,14 @@ abstract class Factory
 
     public function site(string $site): self
     {
+        if ($site === 'random') {
+            $this->randomSite = true;
+        }
+
         return match ($site) {
+            'sequence' => $this->state(new Sequence(
+                ... $this->getSitesFromContentModel()->map(fn ($site) => ['site' => $site])->all()
+            )),
             'random' => $this->sequence(fn (Sequence $sequence) => ['site' => $this->getSitesFromContentModel()->random()]),
             default => $this->set('site', $site),
         };
@@ -338,6 +349,7 @@ abstract class Factory
             'afterMaking' => $this->afterMaking,
             'afterCreating' => $this->afterCreating,
             'recycle' => $this->recycle,
+            'randomSite' => $this->randomSite,
         ], $arguments)));
     }
 
@@ -346,7 +358,7 @@ abstract class Factory
         return match (true) {
             $this->contentModelType() === 'collections' => $this->newEntry($attributes),
             $this->contentModelType() === 'taxonomies' => $this->newTerm($attributes),
-            default => throw new \Exception("The repository \"{$this->contentModelType()}\" is not supported."),
+            default => throw new Exception("The repository \"{$this->contentModelType()}\" is not supported."),
         };
     }
 
