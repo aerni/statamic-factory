@@ -276,7 +276,7 @@ abstract class Factory
         $contentModel = $this->newContentModel();
 
         return match (true) {
-            $contentModel instanceof Entry => $contentModel->locale(),
+            $contentModel instanceof Entry => $contentModel->collection()->sites()->first(),
             $contentModel instanceof Term => $contentModel->defaultLocale(),
         };
     }
