@@ -247,7 +247,7 @@ abstract class Factory
         $evaluatedSite = match (true) {
             $this->getSitesFromContentModel()->contains($this->site) => $this->site,
             $this->site === 'random' => $this->getSitesFromContentModel()->random(),
-            $this->site === 'sequence' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(),
+            $this->site === 'sequence' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(), /* We are using once() so that the Sequence works correctly and isn't created afresh every time this method is called. */
             default => $this->getDefaultSiteFromContentModel(),
         };
 
