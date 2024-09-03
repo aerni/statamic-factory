@@ -334,10 +334,13 @@ class FactoryTest extends TestCase
         $this->assertSame('german', $entry->locale());
 
         $entry = FactoryTestEntryFactory::new()->site('nonexsiting_site')->create();
-        $this->assertSame('default', $entry->locale());
+        $this->assertSame($entry->sites()->first(), $entry->locale());
 
         $entries = FactoryTestEntryFactory::times(10)->site('random')->create();
         $entries->each(fn ($entry) => $this->assertContains($entry->locale(), ['default', 'german']));
+
+        $entries = FactoryTestEntryFactory::times(10)->site('sequence')->create();
+        $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? 'default' : 'german', $entry->locale()));
     }
 
     public function test_term_can_be_created_in_site()
