@@ -346,10 +346,20 @@ class FactoryTest extends TestCase
     public function test_term_can_be_created_in_site()
     {
         $term = FactoryTestTermFactory::new()->site('german')->create();
-        $this->assertSame($term->localizations()->keys()->all(), ['default', 'german']);
+        $this->assertNotEmpty($term->dataForLocale('default'));
+        $this->assertNotEmpty($term->dataForLocale('german'));
 
         $term = FactoryTestTermFactory::new()->site('nonexsiting_site')->create();
-        $this->assertNotContains($term->localizations()->keys()->all(), ['nonexsiting_site']);
+        $this->assertNotEmpty($term->dataForLocale('default'));
+        $this->assertEmpty($term->dataForLocale('nonexsiting_site'));
+
+        $terms = FactoryTestTermFactory::times(10)->site('random')->create();
+        $localizations = $terms->map->fileData()->flatMap(fn ($data) => data_get($data, 'localizations', []));
+        $this->assertNotContains($localizations, ['random']);
+
+        $terms = FactoryTestTermFactory::times(10)->site('sequence')->create();
+        $localizations = $terms->map->fileData()->map(fn ($data) => data_get($data, 'localizations', []));
+        $this->assertEquals($localizations->filter()->count(), 5);
     }
 
     public function test_can_set_publish_state()
