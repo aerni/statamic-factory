@@ -244,12 +244,14 @@ abstract class Factory
     // TODO: Ensure we are applying this correctly wherever necessary.
     protected function evaluateSite(): self
     {
-        return $this->site(match (true) {
+        $evaluatedSite = match (true) {
             $this->getSitesFromContentModel()->contains($this->site) => $this->site,
             $this->site === 'random' => $this->getSitesFromContentModel()->random(),
             $this->site === 'sequence' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(),
             default => $this->getDefaultSiteFromContentModel(),
-        });
+        };
+
+        return $this->site($evaluatedSite);
     }
 
     public function published(bool|string $published): self
