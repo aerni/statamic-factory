@@ -275,12 +275,7 @@ abstract class Factory
 
     protected function getDefaultSiteFromContentModel(): string
     {
-        $contentModel = $this->newContentModel();
-
-        return match (true) {
-            $contentModel instanceof Entry => $contentModel->collection()->sites()->first(),
-            $contentModel instanceof Term => $contentModel->defaultLocale(),
-        };
+        return $this->getSitesFromContentModel()->first();
     }
 
     public function recycle($model)
