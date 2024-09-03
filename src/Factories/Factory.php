@@ -118,7 +118,7 @@ abstract class Factory
             $records = array_fill(0, $records, []);
         }
 
-        return collect($records)->map(fn ($record) => $this->state($record)->create());
+        return collect($records)->map(fn ($record) => $this->evaluateSite()->state($record)->create());
     }
 
     // TODO: Add createOneQuietly()
@@ -241,7 +241,6 @@ abstract class Factory
         return $this->newInstance(['site' => $site]);
     }
 
-    // TODO: Ensure we are applying this correctly wherever necessary.
     protected function evaluateSite(): self
     {
         $evaluatedSite = match (true) {
