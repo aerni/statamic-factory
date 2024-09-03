@@ -373,11 +373,14 @@ class FactoryTest extends TestCase
         $entry = FactoryTestEntryFactory::new()->published('false')->create();
         $this->assertSame(false, $entry->published());
 
-        $entry = FactoryTestEntryFactory::new()->site('random')->create();
+        $entry = FactoryTestEntryFactory::new()->published('random')->create();
         $this->assertContains($entry->published(), [true, false]);
 
-        $entry = FactoryTestEntryFactory::new()->site('anything')->create();
+        $entry = FactoryTestEntryFactory::new()->published('anything')->create();
         $this->assertSame(true, $entry->published());
+
+        $entries = FactoryTestEntryFactory::times(10)->published('sequence')->create();
+        $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? true : false, $entry->published()));
     }
 }
 
