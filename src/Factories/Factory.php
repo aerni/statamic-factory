@@ -236,21 +236,31 @@ abstract class Factory
         return $this->newInstance(['count' => $count]);
     }
 
-    public function site(string $site): self
+    public function inSite(string $site): self
     {
         return $this->newInstance(['site' => $site]);
+    }
+
+    public function inRandomSite(): self
+    {
+        return $this->inSite('inRandomSite');
+    }
+
+    public function perSite(): self
+    {
+        return $this->inSite('perSite')->count($this->getSitesFromContentModel()->count() * ($this->count ?? 1));
     }
 
     protected function evaluateSite(): self
     {
         $evaluatedSite = match (true) {
             $this->getSitesFromContentModel()->contains($this->site) => $this->site,
-            $this->site === 'random' => $this->getSitesFromContentModel()->random(),
-            $this->site === 'sequence' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(), /* We are using once() so that the Sequence works correctly and isn't created afresh every time this method is called. */
+            $this->site === 'inRandomSite' => $this->getSitesFromContentModel()->random(),
+            $this->site === 'perSite' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(), /* We are using once() so that the Sequence works correctly and isn't created afresh every time this method is called. */
             default => $this->getDefaultSiteFromContentModel(),
         };
 
-        return $this->site($evaluatedSite);
+        return $this->inSite($evaluatedSite);
     }
 
     public function published(bool|string $published): self

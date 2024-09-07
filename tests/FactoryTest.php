@@ -330,35 +330,39 @@ class FactoryTest extends TestCase
 
     public function test_entry_can_be_created_in_site()
     {
-        $entry = FactoryTestEntryFactory::new()->site('german')->create();
+        $entry = FactoryTestEntryFactory::new()->inSite('german')->create();
         $this->assertSame('german', $entry->locale());
 
-        $entry = FactoryTestEntryFactory::new()->site('nonexsiting_site')->create();
+        $entry = FactoryTestEntryFactory::new()->inSite('nonexsiting_site')->create();
         $this->assertSame($entry->sites()->first(), $entry->locale());
 
-        $entries = FactoryTestEntryFactory::times(10)->site('random')->create();
+        $entries = FactoryTestEntryFactory::times(10)->inRandomSite()->create();
+        $this->assertCount(10, $entries);
         $entries->each(fn ($entry) => $this->assertContains($entry->locale(), ['default', 'german']));
 
-        $entries = FactoryTestEntryFactory::times(10)->site('sequence')->create();
+        $entries = FactoryTestEntryFactory::times(5)->perSite()->create();
+        $this->assertCount(10, $entries);
         $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? 'default' : 'german', $entry->locale()));
     }
 
     public function test_term_can_be_created_in_site()
     {
-        $term = FactoryTestTermFactory::new()->site('german')->create();
+        $term = FactoryTestTermFactory::new()->inSite('german')->create();
         $this->assertNotEmpty($term->dataForLocale('default'));
         $this->assertNotEmpty($term->dataForLocale('german'));
 
-        $term = FactoryTestTermFactory::new()->site('nonexsiting_site')->create();
+        $term = FactoryTestTermFactory::new()->inSite('nonexsiting_site')->create();
         $this->assertNotEmpty($term->dataForLocale('default'));
         $this->assertEmpty($term->dataForLocale('nonexsiting_site'));
 
-        $terms = FactoryTestTermFactory::times(10)->site('random')->create();
+        $terms = FactoryTestTermFactory::times(10)->inRandomSite()->create();
+        $this->assertCount(10, $terms);
         $localizations = $terms->map->fileData()->flatMap(fn ($data) => data_get($data, 'localizations', []));
         $this->assertNotContains($localizations, ['random']);
 
-        $terms = FactoryTestTermFactory::times(10)->site('sequence')->create();
+        $terms = FactoryTestTermFactory::times(5)->perSite()->create();
         $localizations = $terms->map->fileData()->map(fn ($data) => data_get($data, 'localizations', []));
+        $this->assertEquals($localizations->count(), 10);
         $this->assertEquals($localizations->filter()->count(), 5);
     }
 
