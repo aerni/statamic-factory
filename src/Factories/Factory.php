@@ -270,12 +270,14 @@ abstract class Factory
 
     protected function getSitesFromContentModel(): Collection
     {
-        $contentModel = $this->newContentModel();
+        return once(function () {
+            $contentModel = $this->newContentModel();
 
-        return match (true) {
-            $contentModel instanceof Entry => $contentModel->sites(),
-            $contentModel instanceof Term => $contentModel->taxonomy()->sites(),
-        };
+            return match (true) {
+                $contentModel instanceof Entry => $contentModel->sites(),
+                $contentModel instanceof Term => $contentModel->taxonomy()->sites(),
+            };
+        });
     }
 
     protected function getDefaultSiteFromContentModel(): string
