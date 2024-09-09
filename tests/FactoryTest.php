@@ -2,18 +2,19 @@
 
 namespace Aerni\Factory\Tests;
 
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use ReflectionClass;
-use Statamic\Contracts\Entries\Entry;
-use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Collection as CollectionFacade;
-use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Facades\Site;
-use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\Factory;
+use Statamic\Contracts\Entries\Entry;
+use Illuminate\Support\Facades\Config;
+use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\Entry as EntryFacade;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Statamic\Facades\Collection as CollectionFacade;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -366,25 +367,13 @@ class FactoryTest extends TestCase
         $this->assertEquals($localizations->filter()->count(), 5);
     }
 
-    public function test_can_set_publish_state()
+    public function test_entry_can_be_unpublished()
     {
-        $entry = FactoryTestEntryFactory::new()->published(true)->create();
+        $entry = FactoryTestEntryFactory::new()->create();
         $this->assertSame(true, $entry->published());
 
-        $entry = FactoryTestEntryFactory::new()->published(false)->create();
+        $entry = FactoryTestEntryFactory::new()->unpublished()->create();
         $this->assertSame(false, $entry->published());
-
-        $entry = FactoryTestEntryFactory::new()->published('false')->create();
-        $this->assertSame(false, $entry->published());
-
-        $entry = FactoryTestEntryFactory::new()->published('random')->create();
-        $this->assertContains($entry->published(), [true, false]);
-
-        $entry = FactoryTestEntryFactory::new()->published('anything')->create();
-        $this->assertSame(true, $entry->published());
-
-        $entries = FactoryTestEntryFactory::times(10)->published('sequence')->create();
-        $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? true : false, $entry->published()));
     }
 }
 

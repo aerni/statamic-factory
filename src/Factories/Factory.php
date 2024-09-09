@@ -263,14 +263,9 @@ abstract class Factory
         return $this->inSite($evaluatedSite);
     }
 
-    public function published(bool|string $published): self
+    public function unpublished(): self
     {
-        return match ($published) {
-            'random' => $this->sequence(fn (Sequence $sequence) => ['published' => collect([true, false])->random()]),
-            'sequence' => $this->sequence(fn (Sequence $sequence) => ['published' => true], ['published' => false]),
-            false, 'false' => $this->set('published', false),
-            default => $this->set('published', true),
-        };
+        return $this->set('published', false);
     }
 
     protected function getSitesFromContentModel(): Collection
