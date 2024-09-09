@@ -2,19 +2,19 @@
 
 namespace Aerni\Factory\Tests;
 
-use ReflectionClass;
-use Statamic\Facades\Site;
-use Illuminate\Support\Collection;
 use Aerni\Factory\Factories\Factory;
-use Statamic\Contracts\Entries\Entry;
-use Illuminate\Support\Facades\Config;
-use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Term as TermFacade;
-use Statamic\Facades\Entry as EntryFacade;
-use Statamic\Facades\Taxonomy as TaxonomyFacade;
-use Illuminate\Database\Eloquent\Factories\Sequence;
-use Statamic\Facades\Collection as CollectionFacade;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
+use ReflectionClass;
+use Statamic\Contracts\Entries\Entry;
+use Statamic\Contracts\Taxonomies\Term;
+use Statamic\Facades\Collection as CollectionFacade;
+use Statamic\Facades\Entry as EntryFacade;
+use Statamic\Facades\Site;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Statamic\Facades\Term as TermFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
