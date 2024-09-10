@@ -1,6 +1,6 @@
 <?php
 
-namespace Aerni\Factory\Factories;
+namespace Aerni\Factory\Factories\Concerns;
 
 use Closure;
 

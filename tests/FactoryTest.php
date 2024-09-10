@@ -2,19 +2,20 @@
 
 namespace Aerni\Factory\Tests;
 
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Database\Eloquent\Factories\Sequence;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use ReflectionClass;
-use Statamic\Contracts\Entries\Entry;
-use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Collection as CollectionFacade;
-use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Facades\Site;
-use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Illuminate\Support\Collection;
+use Aerni\Factory\Factories\Factory;
+use Statamic\Contracts\Entries\Entry;
+use Illuminate\Support\Facades\Config;
+use Statamic\Contracts\Taxonomies\Term;
+use Aerni\Factory\Factories\Concerns\CreatesTerm;
 use Statamic\Facades\Term as TermFacade;
+use Aerni\Factory\Factories\Concerns\CreatesEntry;
+use Statamic\Facades\Entry as EntryFacade;
+use Statamic\Facades\Taxonomy as TaxonomyFacade;
+use Statamic\Facades\Collection as CollectionFacade;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -379,7 +380,10 @@ class FactoryTest extends TestCase
 
 class FactoryTestEntryFactory extends Factory
 {
-    protected string $contentModel = 'collections.pages.page';
+    use CreatesEntry;
+
+    protected string $collection = 'pages';
+    protected string $blueprint = 'page';
 
     public function definition(): array
     {
@@ -391,7 +395,10 @@ class FactoryTestEntryFactory extends Factory
 
 class FactoryTestTermFactory extends Factory
 {
-    protected string $contentModel = 'taxonomies.tags.tag';
+    use CreatesTerm;
+
+    protected string $taxonomy = 'tags';
+    protected string $blueprint = 'tag';
 
     public function definition(): array
     {
@@ -403,7 +410,10 @@ class FactoryTestTermFactory extends Factory
 
 class FactoryTestPostFactory extends Factory
 {
-    protected string $contentModel = 'collections.posts.post';
+    use CreatesEntry;
+
+    protected string $collection = 'posts';
+    protected string $blueprint = 'post';
 
     public function definition(): array
     {

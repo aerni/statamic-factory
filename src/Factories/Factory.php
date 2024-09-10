@@ -3,14 +3,11 @@
 namespace Aerni\Factory\Factories;
 
 use Closure;
-use Exception;
 use Faker\Generator;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Illuminate\Database\Eloquent\Factories\Sequence;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
 use Statamic\Contracts\Entries\Entry;
@@ -19,13 +16,11 @@ use Statamic\Facades\Site;
 
 abstract class Factory
 {
-    use Conditionable, DefinitionHelpers, Macroable {
+    use Conditionable, Macroable {
         __call as macroCall;
     }
 
     public static string $namespace = 'Database\\Factories\\Statamic\\';
-
-    protected string $contentModel;
 
     protected Generator $faker;
 
@@ -46,6 +41,8 @@ abstract class Factory
     }
 
     abstract public function definition(): array;
+
+    abstract public function newModel(array $attributes = []);
 
     public static function new(array $attributes = []): self
     {
@@ -155,7 +152,7 @@ abstract class Factory
 
     protected function makeInstance(): Entry|Term
     {
-        return $this->newContentModel($this->getExpandedAttributes());
+        return $this->newModel($this->getExpandedAttributes());
     }
 
     protected function getExpandedAttributes(): array
@@ -180,7 +177,7 @@ abstract class Factory
         return collect($definition)
             ->map($evaluateRelations = function ($attribute) {
                 if ($attribute instanceof self) {
-                    $attribute = $this->getRandomRecycledModel($attribute->contentModelName())?->id()
+                    $attribute = $this->getRandomRecycledModel($attribute->modelName())?->id()
                         ?? $attribute->recycle($this->recycle)->create()->id();
                 } elseif ($attribute instanceof Entry || $attribute instanceof Term) {
                     $attribute = $attribute->id();
@@ -236,55 +233,6 @@ abstract class Factory
         return $this->newInstance(['count' => $count]);
     }
 
-    public function inSite(string $site): self
-    {
-        return $this->newInstance(['site' => $site]);
-    }
-
-    public function inRandomSite(): self
-    {
-        return $this->inSite('inRandomSite');
-    }
-
-    public function perSite(): self
-    {
-        return $this->inSite('perSite')->count($this->getSitesFromContentModel()->count() * ($this->count ?? 1));
-    }
-
-    protected function evaluateSite(): self
-    {
-        $evaluatedSite = match (true) {
-            $this->getSitesFromContentModel()->contains($this->site) => $this->site,
-            $this->site === 'inRandomSite' => $this->getSitesFromContentModel()->random(),
-            $this->site === 'perSite' => once(fn () => new Sequence(...$this->getSitesFromContentModel()))(), /* We are using once() so that the Sequence works correctly and isn't created afresh every time this method is called. */
-            default => $this->getDefaultSiteFromContentModel(),
-        };
-
-        return $this->inSite($evaluatedSite);
-    }
-
-    public function unpublished(): self
-    {
-        return $this->set('published', false);
-    }
-
-    protected function getSitesFromContentModel(): Collection
-    {
-        return once(function () {
-            $contentModel = $this->newContentModel();
-
-            return match (true) {
-                $contentModel instanceof Entry => $contentModel->sites(),
-                $contentModel instanceof Term => $contentModel->taxonomy()->sites(),
-            };
-        });
-    }
-
-    protected function getDefaultSiteFromContentModel(): string
-    {
-        return $this->getSitesFromContentModel()->first();
-    }
-
     public function recycle($model)
     {
         return $this->newInstance([
@@ -294,7 +242,7 @@ abstract class Factory
                     Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
                         ->flatten()
                 )
-                ->groupBy($this->getContentModelNameFromContentClass(...)),
+                ->groupBy($this->getModelNameFromClass(...)),
         ]);
     }
 
@@ -343,67 +291,6 @@ abstract class Factory
         ], $arguments)));
     }
 
-    public function newContentModel(array $attributes = []): Entry|Term
-    {
-        return match (true) {
-            $this->contentModelType() === 'collections' => $this->newEntry($attributes),
-            $this->contentModelType() === 'taxonomies' => $this->newTerm($attributes),
-            default => throw new Exception("The repository \"{$this->contentModelType()}\" is not supported."),
-        };
-    }
-
-    protected function newEntry(array $attributes = []): Entry
-    {
-        $entry = \Statamic\Facades\Entry::make()
-            ->collection($this->contentModelHandle())
-            ->blueprint($this->contentModelBlueprint());
-
-        if ($slug = Arr::pull($attributes, 'slug')) {
-            $entry->slug($slug);
-        }
-
-        if ($entry->sites()->contains($this->site)) {
-            $entry->locale($this->site);
-        }
-
-        $entry->published(Arr::pull($attributes, 'published', true));
-
-        return $entry->data($attributes);
-    }
-
-    protected function newTerm(array $attributes = []): Term
-    {
-        $term = \Statamic\Facades\Term::make()
-            ->taxonomy($this->contentModelHandle())
-            ->blueprint($this->contentModelBlueprint());
-
-        $published = Arr::pull($attributes, 'published', true);
-        $slug = Arr::pull($attributes, 'slug');
-
-        /**
-         * If the term is *not* being created in the default site, we'll copy all the
-         * appropriate values into the default localization since it needs to exist.
-         */
-        if ($this->site !== $term->defaultLocale()) {
-            $term
-                ->inDefaultLocale()
-                ->published($published)
-                ->slug($slug)
-                ->data($attributes);
-        }
-
-        /* Ensure we only create localizations for sites that are configured on the taxonomy. */
-        if ($term->taxonomy()->sites()->contains($this->site)) {
-            $term
-                ->in($this->site)
-                ->published($published)
-                ->slug($slug)
-                ->data($attributes);
-        }
-
-        return $term;
-    }
-
     protected function withFaker(): Generator
     {
         $locale = Site::get($this->site)?->locale() ?? Site::default()->locale();
@@ -411,40 +298,17 @@ abstract class Factory
         return Container::getInstance()->makeWith(Generator::class, ['locale' => $locale]);
     }
 
-    protected function contentModelType(): string
+    public function modelName(): string
     {
-        return Str::before($this->contentModelName(), '.');
+        return str($this->model)->afterLast('\\');
     }
 
-    protected function contentModelHandle(): string
-    {
-        return Str::between($this->contentModelName(), '.', '.');
-    }
-
-    protected function contentModelBlueprint(): string
-    {
-        return Str::afterLast($this->contentModelName(), '.');
-    }
-
-    public function contentModelName(): string
-    {
-        $name = $this->contentModel
-            ?? str(get_class($this))
-                ->remove(static::$namespace)
-                ->remove('Factory')
-                ->lower()
-                ->replace('\\', '.');
-
-        return collect(explode('.', $name))->filter()->count() === 3
-            ? $name
-            : throw new Exception("The model name \"{$name}\" is incomplete. Make sure it follows this convention: \"{contentModelType}.{contentModelHandle}.{contentModelBlueprint}\".");
-    }
-
-    protected function getContentModelNameFromContentClass(Entry|Term $content): string
+    protected function getModelNameFromClass($class): string
     {
         return match (true) {
-            $content instanceof Entry => "collections.{$content->collectionHandle()}.{$content->blueprint()}",
-            $content instanceof Term => "taxonomies.{$content->taxonomyHandle()}.{$content->blueprint()}",
+            $class instanceof Entry => 'Entry'.'\\'.ucfirst($class->collectionHandle()).'\\'.ucfirst($class->blueprint()),
+            $class instanceof Term => 'Term'.'\\'.ucfirst($class->taxonomyHandle()).'\\'.ucfirst($class->blueprint()),
+            $class instanceof self => $class->modelName(),
         };
     }
 }
