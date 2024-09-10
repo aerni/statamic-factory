@@ -12,7 +12,6 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Site;
 
 abstract class Factory
 {
@@ -26,13 +25,11 @@ abstract class Factory
 
     public function __construct(
         protected ?int $count = null,
-        protected ?string $site = null,
         protected ?Collection $states = null,
         protected ?Collection $afterMaking = null,
         protected ?Collection $afterCreating = null,
         protected ?Collection $recycle = null,
     ) {
-        $this->site ??= $this->getDefaultSiteFromContentModel();
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
         $this->afterCreating ??= new Collection;
@@ -62,11 +59,11 @@ abstract class Factory
     public function raw($attributes = []): array
     {
         if ($this->count === null) {
-            return $this->evaluateSite()->state($attributes)->getExpandedAttributes();
+            return $this->state($attributes)->getExpandedAttributes();
         }
 
         return array_map(function () use ($attributes) {
-            return $this->evaluateSite()->state($attributes)->getExpandedAttributes();
+            return $this->state($attributes)->getExpandedAttributes();
         }, range(1, $this->count));
     }
 
@@ -82,7 +79,7 @@ abstract class Factory
         }
 
         if ($this->count === null) {
-            return tap($this->evaluateSite()->state($attributes)->makeInstance(), function ($instance) {
+            return tap($this->state($attributes)->makeInstance(), function ($instance) {
                 $this->callAfterMaking(collect([$instance]));
             });
         }
@@ -92,7 +89,7 @@ abstract class Factory
         }
 
         $instances = collect(array_map(function () use ($attributes) {
-            return $this->evaluateSite()->state($attributes)->makeInstance();
+            return $this->state($attributes)->makeInstance();
         }, range(1, $this->count)));
 
         $this->callAfterMaking($instances);
@@ -115,7 +112,7 @@ abstract class Factory
             $records = array_fill(0, $records, []);
         }
 
-        return collect($records)->map(fn ($record) => $this->evaluateSite()->state($record)->create());
+        return collect($records)->map(fn ($record) => $this->state($record)->create());
     }
 
     // TODO: Add createOneQuietly()
@@ -283,7 +280,6 @@ abstract class Factory
     {
         return new static(...array_values(array_merge([
             'count' => $this->count,
-            'site' => $this->site,
             'states' => $this->states,
             'afterMaking' => $this->afterMaking,
             'afterCreating' => $this->afterCreating,
@@ -293,9 +289,7 @@ abstract class Factory
 
     protected function withFaker(): Generator
     {
-        $locale = Site::get($this->site)?->locale() ?? Site::default()->locale();
-
-        return Container::getInstance()->makeWith(Generator::class, ['locale' => $locale]);
+        return Container::getInstance()->make(Generator::class);
     }
 
     public function modelName(): string

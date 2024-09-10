@@ -21,12 +21,13 @@ trait CreatesTerm
 
         $published = Arr::pull($attributes, 'published', true);
         $slug = Arr::pull($attributes, 'slug');
+        $site = Arr::pull($attributes, 'site');
 
         /**
          * If the term is *not* being created in the default site, we'll copy all the
          * appropriate values into the default localization since it needs to exist.
          */
-        if ($this->site !== $term->defaultLocale()) {
+        if ($site !== $term->defaultLocale()) {
             $term
                 ->inDefaultLocale()
                 ->published($published)
@@ -35,9 +36,9 @@ trait CreatesTerm
         }
 
         /* Ensure we only create localizations for sites that are configured on the taxonomy. */
-        if ($term->taxonomy()->sites()->contains($this->site)) {
+        if ($term->taxonomy()->sites()->contains($site)) {
             $term
-                ->in($this->site)
+                ->in($site)
                 ->published($published)
                 ->slug($slug)
                 ->data($attributes);
