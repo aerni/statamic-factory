@@ -342,7 +342,11 @@ class FactoryTest extends TestCase
         $this->assertCount(10, $entries);
         $entries->each(fn ($entry) => $this->assertContains($entry->locale(), ['default', 'german']));
 
-        $entries = FactoryTestEntryFactory::times(5)->perSite()->create();
+        $entries = FactoryTestEntryFactory::times(5)->inEachSite()->create();
+        $this->assertCount(10, $entries);
+        $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? 'default' : 'german', $entry->locale()));
+
+        $entries = FactoryTestEntryFactory::new()->inEachSite(5)->create();
         $this->assertCount(10, $entries);
         $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? 'default' : 'german', $entry->locale()));
     }
@@ -362,7 +366,12 @@ class FactoryTest extends TestCase
         $localizations = $terms->map->fileData()->flatMap(fn ($data) => data_get($data, 'localizations', []));
         $this->assertNotContains($localizations, ['random']);
 
-        $terms = FactoryTestTermFactory::times(5)->perSite()->create();
+        $terms = FactoryTestTermFactory::times(5)->inEachSite()->create();
+        $localizations = $terms->map->fileData()->map(fn ($data) => data_get($data, 'localizations', []));
+        $this->assertEquals($localizations->count(), 10);
+        $this->assertEquals($localizations->filter()->count(), 5);
+
+        $terms = FactoryTestTermFactory::new()->inEachSite(5)->create();
         $localizations = $terms->map->fileData()->map(fn ($data) => data_get($data, 'localizations', []));
         $this->assertEquals($localizations->count(), 10);
         $this->assertEquals($localizations->filter()->count(), 5);

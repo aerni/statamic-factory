@@ -22,11 +22,11 @@ trait WithSites
         ]);
     }
 
-    public function perSite(): self
+    public function inEachSite(?int $count = null): self
     {
         $sites = $this->getSitesFromContentModel()->map(fn ($site) => ['site' => $site]);
 
-        return $this->sequence(...$sites)->count(($this->count ?? 1) * $sites->count());
+        return $this->sequence(...$sites)->count(($count ?? $this->count ?? 1) * $sites->count());
     }
 
     protected function getSitesFromContentModel(): Collection
