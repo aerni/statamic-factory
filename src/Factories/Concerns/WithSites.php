@@ -3,11 +3,11 @@
 namespace Aerni\Factory\Factories\Concerns;
 
 use Faker\Generator;
-use Statamic\Facades\Site;
-use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
+use Illuminate\Support\Collection;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
+use Statamic\Facades\Site;
 
 trait WithSites
 {
