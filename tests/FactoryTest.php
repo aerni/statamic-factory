@@ -4,11 +4,13 @@ namespace Aerni\Factory\Tests;
 
 use Aerni\Factory\Factories\Concerns\CreatesEntry;
 use Aerni\Factory\Factories\Concerns\CreatesTerm;
+use Aerni\Factory\Factories\Concerns\CreatesUser;
 use Aerni\Factory\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use ReflectionClass;
+use Statamic\Contracts\Auth\User;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Collection as CollectionFacade;
@@ -16,6 +18,7 @@ use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Facades\Site;
 use Statamic\Facades\Taxonomy as TaxonomyFacade;
 use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\User as UserFacade;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
 class FactoryTest extends TestCase
@@ -135,6 +138,13 @@ class FactoryTest extends TestCase
         $term = FactoryTestTermFactory::new()->create();
         $this->assertInstanceOf(Term::class, $term);
         $this->assertNotNull(TermFacade::find($term->id()));
+    }
+
+    public function test_user_can_be_created(): void
+    {
+        $user = FactoryTestUserFactory::new()->create();
+        $this->assertInstanceOf(User::class, $user);
+        $this->assertNotNull(UserFacade::find($user->id()));
     }
 
     public function test_make_creates_unpersisted_model_instance()
@@ -433,6 +443,20 @@ class FactoryTestPostFactory extends Factory
             // 'user_id' => FactoryTestUserFactory::new(), // TODO: Add support for user factory.
             'title' => $this->faker->realText(20),
             'linked_entry' => FactoryTestEntryFactory::new(),
+        ];
+    }
+}
+
+class FactoryTestUserFactory extends Factory
+{
+    use CreatesUser;
+
+    public function definition(): array
+    {
+        return [
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => $this->faker->password,
+            'roles' => ['editor'],
         ];
     }
 }
