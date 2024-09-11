@@ -2,10 +2,12 @@
 
 namespace Aerni\Factory\Factories\Concerns;
 
+use Faker\Generator;
+use Statamic\Facades\Site;
 use Illuminate\Support\Collection;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Site;
 
 trait WithSites
 {
@@ -40,5 +42,33 @@ trait WithSites
                 default => Site::all()->map->handle(),
             };
         });
+    }
+
+    protected function evaluateSiteStates(Collection $states): Collection
+    {
+        $evaluatedSiteStates = $states
+            ->map(fn ($state) => (clone $state)()) /* Clone the closure so that we don't run into issues when evaluating the same closure later. Needed for sequences to work correctly. */
+            ->filter(fn ($state) => isset($state['site']))
+            ->map(fn ($state, $index) => array_merge(['index' => $index], $state));
+
+        if ($evaluatedSiteStates->isEmpty()) {
+            return $states;
+        }
+
+        $siteState = $evaluatedSiteStates->last();
+
+        $site = $this->getSitesFromContentModel()->flip()->has($siteState['site'])
+            ? Site::get($siteState['site'])
+            : Site::get($this->getSitesFromContentModel()->first());
+
+        $this->faker = Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
+
+        $siteState = ! isset($siteState['isRandomSite'])
+            ? $states->get($siteState['index'])
+            : fn () => ['site' => $site->handle()]; /* Explicitly set the evaluated random site so that we don't get a new random site later. */
+
+        return $states->diffKeys($evaluatedSiteStates)
+            ->push($siteState)
+            ->values();
     }
 }

@@ -4,15 +4,16 @@ namespace Aerni\Factory\Factories;
 
 use Closure;
 use Faker\Generator;
-use Illuminate\Container\Container;
-use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
-use Illuminate\Database\Eloquent\Factories\Sequence;
+use Statamic\Facades\Site;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Container\Container;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Site;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\Support\Traits\Conditionable;
+use Aerni\Factory\Factories\Concerns\WithSites;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 
 abstract class Factory
 {
@@ -161,7 +162,10 @@ abstract class Factory
     protected function getRawAttributes(): array
     {
         return $this->states
-            ->pipe($this->evaluateSiteStates(...))
+            ->when(
+                method_exists($this, 'evaluateSiteStates'),
+                fn ($states) => $this->evaluateSiteStates($states)
+            )
             ->reduce(function (array $carry, $state) {
                 if ($state instanceof Closure) {
                     $state = $state->bindTo($this);
@@ -169,34 +173,6 @@ abstract class Factory
 
                 return array_merge($carry, $state($carry));
             }, $this->definition());
-    }
-
-    protected function evaluateSiteStates(Collection $states): Collection
-    {
-        $evaluatedSiteStates = $states
-            ->map(fn ($state) => (clone $state)()) /* Clone the closure so that we don't run into issues when evaluating the same closure later. Needed for sequences to work correctly. */
-            ->filter(fn ($state) => isset($state['site']))
-            ->map(fn ($state, $index) => array_merge(['index' => $index], $state));
-
-        if ($evaluatedSiteStates->isEmpty()) {
-            return $states;
-        }
-
-        $siteState = $evaluatedSiteStates->last();
-
-        $site = $this->getSitesFromContentModel()->flip()->has($siteState['site'])
-            ? Site::get($siteState['site'])
-            : Site::get($this->getSitesFromContentModel()->first());
-
-        $this->faker = Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
-
-        $siteState = ! isset($siteState['isRandomSite'])
-            ? $states->get($siteState['index'])
-            : fn () => ['site' => $site->handle()]; /* Explicitly set the evaluated random site so that we don't get a new random site later. */
-
-        return $states->diffKeys($evaluatedSiteStates)
-            ->push($siteState)
-            ->values();
     }
 
     protected function expandAttributes(array $definition)
@@ -319,8 +295,9 @@ abstract class Factory
 
     protected function withFaker(): Generator
     {
-        // TODO: This won't work for new content models that don't use the WithSites trait.
-        $site = Site::get($this->getSitesFromContentModel()->first());
+        $site = method_exists($this, 'getSitesFromContentModel')
+            ? Site::get($this->getSitesFromContentModel()->first())
+            : Site::default();
 
         return Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
     }
