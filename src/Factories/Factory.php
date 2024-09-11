@@ -245,7 +245,7 @@ abstract class Factory
                     Collection::wrap(
                         ($model instanceof Entry || $model instanceof Term || $model instanceof User)
                             ? func_get_args() : $model
-                        )
+                    )
                         ->flatten()
                 )
                 ->groupBy($this->getModelNameFromClass(...)),
