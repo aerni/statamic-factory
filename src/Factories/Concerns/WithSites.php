@@ -16,14 +16,16 @@ trait WithSites
 
     public function inRandomSite(): self
     {
-        return $this->state(fn () => ['site' => $this->getSitesFromContentModel()->random()]);
+        return $this->state(fn () => [
+            'site' => $this->getSitesFromContentModel()->random(),
+            'isRandomSite' => true,
+        ]);
     }
 
     public function perSite(): self
     {
         $sites = $this->getSitesFromContentModel()->map(fn ($site) => ['site' => $site]);
 
-        // TODO: This won't work if count() is used after perSite(). Can we make this work with a callback?
         return $this->sequence(...$sites)->count(($this->count ?? 1) * $sites->count());
     }
 

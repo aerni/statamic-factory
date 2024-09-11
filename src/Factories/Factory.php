@@ -176,7 +176,8 @@ abstract class Factory
     {
         $evaluatedSiteStates = $states
             ->map(fn ($state) => (clone $state)()) /* Clone the closure so that we don't run into issues when evaluating the same closure later. Needed for sequences to work correctly. */
-            ->filter(fn ($state) => isset($state['site']));
+            ->filter(fn ($state) => isset($state['site']))
+            ->map(fn ($state, $index) => array_merge(['index' => $index], $state));
 
         if ($evaluatedSiteStates->isEmpty()) {
             return $states;
@@ -190,9 +191,12 @@ abstract class Factory
 
         $this->faker = Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
 
-        // TODO: This breaks the perSite() sequence but works for inSite() and inRandomSite().
+        $siteState = ! isset($siteState['isRandomSite'])
+            ? $states->get($siteState['index'])
+            : fn () => ['site' => $site->handle()]; /* Explicitly set the evaluated random site so that we don't get a new random site later. */
+
         return $states->diffKeys($evaluatedSiteStates)
-            ->push(fn () => ['site' => $site->handle()])
+            ->push($siteState)
             ->values();
     }
 
