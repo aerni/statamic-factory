@@ -211,22 +211,22 @@ abstract class Factory
         ]);
     }
 
-    public function set($key, $value)
+    public function set($key, $value): self
     {
         return $this->state([$key => $value]);
     }
 
-    public function sequence(...$sequence)
+    public function sequence(...$sequence): self
     {
         return $this->state(new Sequence(...$sequence));
     }
 
-    public function forEachSequence(...$sequence)
+    public function forEachSequence(...$sequence): self
     {
         return $this->state(new Sequence(...$sequence))->count(count($sequence));
     }
 
-    public function crossJoinSequence(...$sequence)
+    public function crossJoinSequence(...$sequence): self
     {
         return $this->state(new CrossJoinSequence(...$sequence));
     }
