@@ -13,7 +13,7 @@ trait CreatesTerm
 
     protected $model = Term::class;
 
-    public function newModel(array $attributes = [])
+    public function newModel(array $attributes = []): Term
     {
         $term = TermFacade::make()
             ->taxonomy($this->taxonomy())

@@ -14,7 +14,7 @@ trait CreatesEntry
 
     protected $model = Entry::class;
 
-    public function newModel(array $attributes = [])
+    public function newModel(array $attributes = []): Entry
     {
         $entry = EntryFacade::make()
             ->collection($this->collection())
