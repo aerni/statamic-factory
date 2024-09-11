@@ -344,6 +344,7 @@ class FactoryTest extends TestCase
 
         $entries = FactoryTestEntryFactory::times(5)->perSite()->create();
         $this->assertCount(10, $entries);
+        dd($entries->map->locale());
         $entries->each(fn ($entry, $index) => $this->assertSame($index % 2 === 0 ? 'default' : 'german', $entry->locale()));
     }
 

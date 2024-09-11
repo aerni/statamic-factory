@@ -24,9 +24,13 @@ trait CreatesEntry
             $entry->slug($slug);
         }
 
-        if (($site = Arr::pull($attributes, 'site')) && $entry->sites()->contains($site)) {
-            $entry->locale($site);
-        }
+        $site = Arr::pull($attributes, 'site');
+
+        $site = $entry->sites()->contains($site)
+            ? $site
+            : $entry->sites()->first();
+
+        $entry->locale($site);
 
         $entry->published(Arr::pull($attributes, 'published', true));
 
