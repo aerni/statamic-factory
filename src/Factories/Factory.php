@@ -182,8 +182,7 @@ abstract class Factory
                 if ($attribute instanceof self) {
                     $attribute = $this->getRandomRecycledModel($attribute->modelName())?->id()
                         ?? $attribute->recycle($this->recycle)->create()->id();
-                } elseif ($attribute instanceof Entry || $attribute instanceof Term) {
-                    // TODO: Also support users
+                } elseif ($attribute instanceof Entry || $attribute instanceof Term || $attribute instanceof User) {
                     $attribute = $attribute->id();
                 }
 
@@ -243,8 +242,10 @@ abstract class Factory
             'recycle' => $this->recycle
                 ->flatten()
                 ->merge(
-                    // TODO: Also support users
-                    Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
+                    Collection::wrap(
+                        ($model instanceof Entry || $model instanceof Term || $model instanceof User)
+                            ? func_get_args() : $model
+                        )
                         ->flatten()
                 )
                 ->groupBy($this->getModelNameFromClass(...)),
