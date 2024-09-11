@@ -14,6 +14,7 @@ use Illuminate\Support\Traits\Conditionable;
 use Aerni\Factory\Factories\Concerns\WithSites;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
+use Statamic\Contracts\Auth\User;
 
 abstract class Factory
 {
@@ -69,12 +70,12 @@ abstract class Factory
         }, range(1, $this->count));
     }
 
-    public function makeOne($attributes = []): Entry|Term
+    public function makeOne($attributes = []): Entry|Term|User
     {
         return $this->count(null)->make($attributes);
     }
 
-    public function make(array $attributes = []): Collection|Entry|Term
+    public function make(array $attributes = []): Collection|Entry|Term|User
     {
         if (! empty($attributes)) {
             return $this->state($attributes)->make([]);
@@ -99,7 +100,7 @@ abstract class Factory
         return $instances;
     }
 
-    public function createOne($attributes = []): Entry|Term
+    public function createOne($attributes = []): Entry|Term|User
     {
         return $this->count(null)->create($attributes);
     }
@@ -123,7 +124,7 @@ abstract class Factory
 
     // TODO: Add createQuietly()
 
-    public function create(array $attributes = []): Collection|Entry|Term
+    public function create(array $attributes = []): Collection|Entry|Term|User
     {
         if (! empty($attributes)) {
             return $this->state($attributes)->create();
@@ -149,7 +150,7 @@ abstract class Factory
         return fn () => $this->create($attributes);
     }
 
-    protected function makeInstance(): Entry|Term
+    protected function makeInstance(): Entry|Term|User
     {
         return $this->newModel($this->getExpandedAttributes());
     }
@@ -183,6 +184,7 @@ abstract class Factory
                     $attribute = $this->getRandomRecycledModel($attribute->modelName())?->id()
                         ?? $attribute->recycle($this->recycle)->create()->id();
                 } elseif ($attribute instanceof Entry || $attribute instanceof Term) {
+                    // TODO: Also support users
                     $attribute = $attribute->id();
                 }
 
@@ -242,6 +244,7 @@ abstract class Factory
             'recycle' => $this->recycle
                 ->flatten()
                 ->merge(
+                    // TODO: Also support users
                     Collection::wrap(($model instanceof Entry || $model instanceof Term) ? func_get_args() : $model)
                         ->flatten()
                 )
@@ -312,6 +315,7 @@ abstract class Factory
         return match (true) {
             $class instanceof Entry => 'Entry'.'\\'.ucfirst($class->collectionHandle()).'\\'.ucfirst($class->blueprint()),
             $class instanceof Term => 'Term'.'\\'.ucfirst($class->taxonomyHandle()).'\\'.ucfirst($class->blueprint()),
+            $class instanceof User => 'User',
             $class instanceof self => $class->modelName(),
         };
     }
