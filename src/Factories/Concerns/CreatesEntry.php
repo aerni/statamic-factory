@@ -24,6 +24,10 @@ trait CreatesEntry
             $entry->slug($slug);
         }
 
+        if ($date = Arr::pull($attributes, 'date')) {
+            $entry->date($date);
+        }
+
         $site = Arr::pull($attributes, 'site');
 
         $site = $entry->sites()->contains($site)
