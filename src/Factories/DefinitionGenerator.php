@@ -2,17 +2,22 @@
 
 namespace Aerni\Factory\Factories;
 
-use Aerni\Factory\Support\Utils;
-use Illuminate\Contracts\Support\Arrayable;
+use Statamic\Fields\Field;
+use Statamic\Fields\Fields;
 use Statamic\Fields\Blueprint;
+use Aerni\Factory\Support\Utils;
+use Illuminate\Support\Collection;
+use Illuminate\Contracts\Support\Arrayable;
 
 class DefinitionGenerator implements Arrayable
 {
-    public function __construct(protected Blueprint $blueprint) {}
+    public function __construct(protected Blueprint $blueprint)
+    {
+    }
 
     public function toArray(): array
     {
-        return $this->processBlueprint();
+        return $this->processFields($this->blueprint->fields()->all());
     }
 
     public function __toString(): string
@@ -20,52 +25,33 @@ class DefinitionGenerator implements Arrayable
         return Utils::arrayToString($this->toArray());
     }
 
-    protected function processBlueprint(): array
+    protected function processFields(Collection $fields): array
     {
-        return $this->blueprint->fields()->all()
-            ->reject(fn ($field) => $field->visibility() === 'computed')
-            ->map(fn ($field) => ['handle' => $field->handle(), 'field' => $field->config()])
-            ->flatMap($this->processFields(...))
-            ->all();
+        return $fields->map(fn (Field $field) => match ($field->type()) {
+            'bard' => $this->processBardAndReplicator($field),
+            'replicator' => $this->processBardAndReplicator($field),
+            'grid' => $this->processGrid($field),
+            default => null,
+        })->all();
     }
 
-    protected function processNestedFields(array $fields): array
+    protected function processBardAndReplicator(Field $field): array
     {
-        return collect($fields)
-            ->flatMap($this->processFields(...))
-            ->all();
+        return collect($field->toArray()['sets'])
+            ->flatMap(function ($setGroup) {
+                return collect($setGroup['sets'])->map(function ($set, $type) {
+                    return array_merge(
+                        $this->processFields((new Fields($set['fields']))->all()),
+                        ['type' => $type, 'enabled' => true]
+                    );
+                });
+            })->values()->toArray();
     }
 
-    protected function processFields(array $config): array
+    protected function processGrid(Field $field): array
     {
-        return match (true) {
-            $config['field']['type'] === 'bard' => $this->processBardAndReplicator($config),
-            $config['field']['type'] === 'replicator' => $this->processBardAndReplicator($config),
-            $config['field']['type'] === 'grid' => $this->processGrid($config),
-            default => [$config['handle'] => null]
-        };
-    }
-
-    protected function processBardAndReplicator(array $config): array
-    {
-        $fields = collect($config['field']['sets'])->flatMap(function ($group) {
-            return collect($group['sets'])->map(function ($set, $key) {
-                return array_merge($this->processNestedFields($set['fields']), [
-                    'type' => $key,
-                    'enabled' => true,
-                ]);
-            });
-        })->values()->all();
-
-        return [$config['handle'] => $fields];
-    }
-
-    protected function processGrid(array $config): array
-    {
-        $fields = collect($config['field']['fields'])
-            ->flatMap(fn ($config) => $this->processNestedFields([$config]))
-            ->toArray();
-
-        return [$config['handle'] => $fields];
+        return (new Fields($field->toArray()['fields']))
+            ->all()
+            ->pipe($this->processFields(...));
     }
 }
