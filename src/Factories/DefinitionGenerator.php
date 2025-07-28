@@ -2,18 +2,16 @@
 
 namespace Aerni\Factory\Factories;
 
+use Aerni\Factory\Support\Utils;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
+use Statamic\Fields\Blueprint;
 use Statamic\Fields\Field;
 use Statamic\Fields\Fields;
-use Statamic\Fields\Blueprint;
-use Aerni\Factory\Support\Utils;
-use Illuminate\Support\Collection;
-use Illuminate\Contracts\Support\Arrayable;
 
 class DefinitionGenerator implements Arrayable
 {
-    public function __construct(protected Blueprint $blueprint)
-    {
-    }
+    public function __construct(protected Blueprint $blueprint) {}
 
     public function toArray(): array
     {
