@@ -48,8 +48,10 @@ class DefinitionGenerator implements Arrayable
 
     protected function processGrid(Field $field): array
     {
-        return (new Fields($field->toArray()['fields']))
+        $fields = (new Fields($field->toArray()['fields']))
             ->all()
             ->pipe($this->processFields(...));
+
+        return [$fields];
     }
 }
