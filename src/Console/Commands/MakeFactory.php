@@ -42,6 +42,7 @@ class MakeFactory extends Command
     /**
      * Execute the console command.
      */
+    // TODO: Import the apropriate traits like "CreatesEntry", "CreatesTerm", "CreatesUser".
     public function handle(): void
     {
         $factory = $this->getFactoryClassData();
