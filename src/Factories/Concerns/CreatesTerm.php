@@ -3,8 +3,10 @@
 namespace Aerni\Factory\Factories\Concerns;
 
 use Illuminate\Support\Arr;
+use Statamic\Fields\Blueprint;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Term as TermFacade;
+use Statamic\Facades\Blueprint as BlueprintFacade;
 
 trait CreatesTerm
 {
@@ -16,8 +18,8 @@ trait CreatesTerm
     public function newModel(array $attributes = []): Term
     {
         $term = TermFacade::make()
-            ->taxonomy($this->taxonomy())
-            ->blueprint($this->blueprint());
+            ->taxonomy($this->taxonomyHandle())
+            ->blueprint($this->blueprintHandle());
 
         $published = Arr::pull($attributes, 'published', true);
         $slug = Arr::pull($attributes, 'slug');
@@ -47,7 +49,7 @@ trait CreatesTerm
         return $term;
     }
 
-    protected function taxonomy(): string
+    protected function taxonomyHandle(): string
     {
         return $this->taxonomy
             ?? str(get_class($this))
@@ -56,7 +58,7 @@ trait CreatesTerm
                 ->lower();
     }
 
-    protected function blueprint(): string
+    protected function blueprintHandle(): string
     {
         return $this->blueprint
             ?? str(get_class($this))
@@ -65,8 +67,13 @@ trait CreatesTerm
                 ->lower();
     }
 
+    protected function blueprint(): Blueprint
+    {
+        return BlueprintFacade::find("taxonomies/{$this->taxonomyHandle()}/{$this->blueprintHandle()}");
+    }
+
     public function modelName(): string
     {
-        return parent::modelName().'\\'.ucfirst($this->collection()).'\\'.ucfirst($this->blueprint());
+        return parent::modelName().'\\'.ucfirst($this->taxonomyHandle()).'\\'.ucfirst($this->blueprintHandle());
     }
 }

@@ -3,22 +3,26 @@
 namespace Aerni\Factory\Factories\Concerns;
 
 use Illuminate\Support\Arr;
+use Statamic\Fields\Blueprint;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Entry as EntryFacade;
+use Aerni\Factory\Factories\Concerns\WithAssets;
+use Statamic\Facades\Blueprint as BlueprintFacade;
 
 trait CreatesEntry
 {
     use DefinitionHelpers;
     use Publishable;
     use WithSites;
+    use WithAssets;
 
     protected $model = Entry::class;
 
     public function newModel(array $attributes = []): Entry
     {
         $entry = EntryFacade::make()
-            ->collection($this->collection())
-            ->blueprint($this->blueprint());
+            ->collection($this->collectionHandle())
+            ->blueprint($this->blueprintHandle());
 
         if ($slug = Arr::pull($attributes, 'slug')) {
             $entry->slug($slug);
@@ -41,7 +45,7 @@ trait CreatesEntry
         return $entry->data($attributes);
     }
 
-    protected function collection(): string
+    protected function collectionHandle(): string
     {
         return $this->collection
             ?? str(get_class($this))
@@ -50,7 +54,7 @@ trait CreatesEntry
                 ->lower();
     }
 
-    protected function blueprint(): string
+    protected function blueprintHandle(): string
     {
         return $this->blueprint
             ?? str(get_class($this))
@@ -59,8 +63,13 @@ trait CreatesEntry
                 ->lower();
     }
 
+    protected function blueprint(): Blueprint
+    {
+        return BlueprintFacade::find("collections/{$this->collectionHandle()}/{$this->blueprintHandle()}");
+    }
+
     public function modelName(): string
     {
-        return parent::modelName().'\\'.ucfirst($this->collection()).'\\'.ucfirst($this->blueprint());
+        return parent::modelName().'\\'.ucfirst($this->collectionHandle()).'\\'.ucfirst($this->blueprintHandle());
     }
 }

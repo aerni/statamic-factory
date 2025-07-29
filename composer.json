@@ -20,6 +20,7 @@
         "fakerphp/faker": "^1.23.0",
         "laravel/framework": "^11.21 || ^12.0",
         "laravel/prompts": "^0.1.24 || ^0.2.0 || ^0.3.0",
+        "smknstd/fakerphp-picsum-images": "^1.0",
         "statamic/cms": "^5.0"
     },
     "require-dev": {

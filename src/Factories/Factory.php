@@ -34,7 +34,7 @@ abstract class Factory
     ) {
         $this->states ??= new Collection;
         $this->afterMaking ??= new Collection;
-        $this->afterCreating ??= new Collection;
+        $this->afterCreating ??= $this->defaultAfterCreating();
         $this->recycle ??= new Collection;
         $this->faker = $this->withFaker();
     }
@@ -269,6 +269,14 @@ abstract class Factory
         return $this->newInstance([
             'afterCreating' => $this->afterCreating->concat([$callback]),
         ]);
+    }
+
+    protected function defaultAfterCreating(): Collection
+    {
+        return collect()
+            ->when(method_exists($this, 'moveAssets'), function ($collection) {
+                $collection->push(fn ($entry) => $this->moveAssets($entry));
+            });
     }
 
     protected function callAfterMaking(Collection $instances): void
