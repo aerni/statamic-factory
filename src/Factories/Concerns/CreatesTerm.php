@@ -3,10 +3,10 @@
 namespace Aerni\Factory\Factories\Concerns;
 
 use Illuminate\Support\Arr;
-use Statamic\Fields\Blueprint;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Term as TermFacade;
 use Statamic\Facades\Blueprint as BlueprintFacade;
+use Statamic\Facades\Term as TermFacade;
+use Statamic\Fields\Blueprint;
 
 trait CreatesTerm
 {

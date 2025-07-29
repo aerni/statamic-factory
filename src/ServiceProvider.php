@@ -4,8 +4,8 @@ namespace Aerni\Factory;
 
 use Faker\Factory;
 use Faker\Generator;
-use Statamic\Providers\AddonServiceProvider;
 use Smknstd\FakerPicsumImages\FakerPicsumImagesProvider;
+use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {

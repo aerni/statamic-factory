@@ -3,18 +3,17 @@
 namespace Aerni\Factory\Factories\Concerns;
 
 use Illuminate\Support\Arr;
-use Statamic\Fields\Blueprint;
 use Statamic\Contracts\Entries\Entry;
-use Statamic\Facades\Entry as EntryFacade;
-use Aerni\Factory\Factories\Concerns\WithAssets;
 use Statamic\Facades\Blueprint as BlueprintFacade;
+use Statamic\Facades\Entry as EntryFacade;
+use Statamic\Fields\Blueprint;
 
 trait CreatesEntry
 {
     use DefinitionHelpers;
     use Publishable;
-    use WithSites;
     use WithAssets;
+    use WithSites;
 
     protected $model = Entry::class;
 

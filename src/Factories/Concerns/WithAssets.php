@@ -2,19 +2,19 @@
 
 namespace Aerni\Factory\Factories\Concerns;
 
-use Statamic\Fields\Field;
-use Statamic\Fields\Value;
-use Statamic\Fields\Fields;
-use Statamic\Fields\Values;
-use Statamic\Fieldtypes\Bard;
-use Statamic\Fieldtypes\Grid;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use Statamic\Fieldtypes\Replicator;
-use Illuminate\Filesystem\Filesystem;
-use Statamic\Contracts\Entries\Entry;
-use Statamic\Fieldtypes\Assets\Assets;
 use Illuminate\Support\Facades\Storage;
+use Statamic\Contracts\Entries\Entry;
+use Statamic\Fields\Field;
+use Statamic\Fields\Fields;
+use Statamic\Fields\Value;
+use Statamic\Fields\Values;
+use Statamic\Fieldtypes\Assets\Assets;
+use Statamic\Fieldtypes\Bard;
+use Statamic\Fieldtypes\Grid;
+use Statamic\Fieldtypes\Replicator;
 use Statamic\Forms\Uploaders\AssetsUploader;
 
 trait WithAssets
