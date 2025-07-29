@@ -64,7 +64,14 @@ trait WithAssets
 
         $image = $this->image($width, $height);
 
-        $uploadedFile = $this->uploadedFile($image);
+        if (!$image) {
+            ray('no image');
+            return '';
+        }
+
+        // TODO: Running into "The file "" does not exist" exception.
+        // The issue seems to be that the image faker library returns an empty string. Maybe because it's returning before the image is downloaded or something like that?
+        $uploadedFile = new UploadedFile($image, basename($image));
 
         $id = AssetsUploader::field($field->config())->upload($uploadedFile);
 
@@ -114,19 +121,5 @@ trait WithAssets
         }
 
         return $this->faker->image($storage->path($dir), $width, $height);
-    }
-
-    protected function uploadedFile(string $path): UploadedFile
-    {
-        $filesystem = new Filesystem;
-
-        $name = $filesystem->name($path);
-        $extension = $filesystem->extension($path);
-        $originalName = "{$name}.{$extension}";
-        $mimeType = $filesystem->mimeType($path);
-        $error = null;
-        $test = true;
-
-        return new UploadedFile($path, $originalName, $mimeType, $error, $test);
     }
 }
