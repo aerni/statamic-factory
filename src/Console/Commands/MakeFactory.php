@@ -42,7 +42,6 @@ class MakeFactory extends Command
     /**
      * Execute the console command.
      */
-    // TODO: Import the apropriate traits like "CreatesEntry", "CreatesTerm", "CreatesUser".
     public function handle(): void
     {
         $factory = $this->getFactoryClassData();
@@ -146,6 +145,10 @@ class MakeFactory extends Command
             'definition' => new DefinitionGenerator($blueprint),
             'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
             'createSeeder' => $createSeeder,
+            'trait' => match ($contentType) {
+                'collections' => 'CreatesEntry',
+                'taxonomies' => 'CreatesTerm',
+            },
         ];
     }
 
@@ -161,8 +164,8 @@ class MakeFactory extends Command
     protected function generateFactoryFromStub(array $replacements): string
     {
         return preg_replace(
-            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ definition \}}/'],
-            [$replacements['classNamespace'], $replacements['className'], $replacements['definition']],
+            ['/\{{ classNamespace \}}/', '/\{{ className \}}/', '/\{{ trait \}}/', '/\{{ definition \}}/'],
+            [$replacements['classNamespace'], $replacements['className'], $replacements['trait'], $replacements['definition']],
             File::get(__DIR__.'/stubs/factory.stub')
         );
     }

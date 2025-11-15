@@ -2,10 +2,13 @@
 
 namespace {{ classNamespace }};
 
+use Aerni\Factory\Factories\Concerns\{{ trait }};
 use Aerni\Factory\Factories\Factory;
 
 class {{ className }} extends Factory
 {
+    use {{ trait }};
+
     /**
      * Define the content model's default state.
      *
