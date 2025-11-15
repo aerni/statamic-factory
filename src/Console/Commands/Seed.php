@@ -4,11 +4,13 @@ namespace Aerni\Factory\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use SplFileInfo;
+use Illuminate\Support\Str;
 use Statamic\Console\RunsInPlease;
+use Symfony\Component\Finder\SplFileInfo;
 
-use function Laravel\Prompts\select;
+use function Laravel\Prompts\multiselect;
 
 class Seed extends Command
 {
@@ -21,7 +23,7 @@ class Seed extends Command
      * @var string
      */
     protected $signature = 'statamic:seed
-        {--class=Database\\Seeders\\StatamicSeeder : The class name of the root seeder}
+        {--all : Run all available Statamic seeders}
         {--force : Force the operation to run when in production}
     ';
 
@@ -35,56 +37,73 @@ class Seed extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         if (! $this->confirmToProceed()) {
-            return 1;
+            return Command::FAILURE;
         }
 
-        $this->components->info('Seeding Statamic with content.');
+        $this->seeders()->each($this->runSeeder(...));
 
-        $this->getSeeder()->__invoke();
-
-        return 0;
+        return Command::SUCCESS;
     }
 
-    protected function getSeeder()
+    protected function seeders(): Collection
     {
-        $class = $this->option('class');
+        $seeders = $this->discoverSeeders();
 
-        if ($class !== 'Database\\Seeders\\StatamicSeeder') {
-            $class = $this->guessClass($class);
+        if ($seeders->isEmpty()) {
+            $this->fail('No Statamic seeders found in database/seeders/Statamic.');
         }
 
-        return $this->laravel->make($class)
+        if ($this->option('all')) {
+            return $seeders->keys();
+        }
+
+        return collect(multiselect(
+            label: 'Which seeders would you like to run?',
+            options: $seeders,
+            required: 'Select at least one seeder'
+        ));
+    }
+
+    protected function discoverSeeders(): Collection
+    {
+        $seedersPath = database_path('seeders/Statamic');
+
+        if (! File::exists($seedersPath)) {
+            return collect();
+        }
+
+        return collect(File::allFiles($seedersPath))
+            ->filter(fn (SplFileInfo $file) => $file->getExtension() === 'php')
+            ->mapWithKeys(fn (SplFileInfo $file) => [$this->getSeederNamespace($file) => $this->getSeederDisplay($file)])
+            ->sort();
+    }
+
+    protected function runSeeder(string $class): void
+    {
+        $seeder = $this->laravel->make($class)
             ->setContainer($this->laravel)
             ->setCommand($this);
+
+        $this->components->task(
+            'Running '.Str::afterLast($class, '\\'),
+            fn () => $seeder->__invoke()
+        );
     }
 
-    protected function guessClass(string $class): string
+    protected function getSeederNamespace(SplFileInfo $file): string
     {
-        $files = collect(File::allFiles(database_path('seeders/Statamic')))
-            ->where(fn ($file) => str($file->getRelativePathName())->replace('/', '\\')->contains($class));
-
-        if ($files->isEmpty()) {
-            return $class;
-        }
-
-        if ($files->count() > 1) {
-            return select(
-                'Multiple seeders found. Which one do you want to run?',
-                $files->mapWithKeys(fn ($file) => [$this->getNamespaceFromFile($file) => $this->getNamespaceFromFile($file)])
-            );
-        }
-
-        return $this->getNamespaceFromFile($files->first());
-    }
-
-    protected function getNamespaceFromFile(SplFileInfo $file): string
-    {
-        return str($file->getRelativePathname())
+        return Str::of($file->getRelativePathname())
             ->replace('/', '\\')
             ->prepend('Database\\Seeders\\Statamic\\')
+            ->remove('.php');
+    }
+
+    protected function getSeederDisplay(SplFileInfo $file): string
+    {
+        return Str::of($file->getRelativePathname())
             ->remove('.php');
     }
 }
