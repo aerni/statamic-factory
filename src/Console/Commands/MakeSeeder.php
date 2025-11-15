@@ -3,11 +3,13 @@
 namespace Aerni\Factory\Console\Commands;
 
 use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Aerni\Factory\Console\Commands\Concerns\ReadsClassFromFile;
 use Aerni\Factory\Console\Commands\Concerns\SavesFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Statamic\Console\RunsInPlease;
+use Symfony\Component\Finder\SplFileInfo;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
@@ -16,6 +18,7 @@ use function Laravel\Prompts\select;
 class MakeSeeder extends Command
 {
     use GetsRelativePath;
+    use ReadsClassFromFile;
     use RunsInPlease;
     use SavesFile;
 
@@ -81,24 +84,21 @@ class MakeSeeder extends Command
     {
         $factories = collect(File::allFiles(database_path('factories/Statamic')));
 
-        $selectedFactory = select(
+        $selectedFactoryName = select(
             label: 'For which factory do you want to create a seeder?',
-            options: $factories->mapWithKeys(fn ($factory) => [
-                $factory->getRelativePathname() => $this->generateNamespaceFromPath($factory->getRelativePathName()),
-            ]),
+            options: $factories->mapWithKeys(fn (SplFileInfo $factory) => [$this->getClassName($factory) => $this->getClassDisplay($factory)]),
         );
 
-        $factory = $factories->firstWhere(fn ($factory) => $factory->getRelativePathName() === $selectedFactory);
+        $factory = $factories->firstWhere(fn (SplFileInfo $factory) => $this->getClassName($factory) === $selectedFactoryName);
 
-        $classNamespace = Str::replace('Factories', 'Seeders', $this->generateNamespaceFromPath($factory->getPath()));
-        $factoryClassName = Str::remove('.php', $factory->getFilename());
-        $factoryClassImport = $this->generateNamespaceFromPath($factory->getPath()).'\\'.$factoryClassName;
-        $className = str($factory->getFilename())->remove('Factory.php')->append('Seeder');
+        $classNamespace = Str::of($selectedFactoryName)->beforeLast('\\')->replace('Factories', 'Seeders');
+        $factoryClassName = Str::of($selectedFactoryName)->afterLast('\\');
+        $className = Str::of($factoryClassName)->replace('Factory', 'Seeder');
 
         return [
             'classNamespace' => $classNamespace,
             'className' => $className,
-            'factoryClassImport' => $factoryClassImport,
+            'factoryClassImport' => $selectedFactoryName,
             'factoryClassName' => $factoryClassName,
             'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
         ];
@@ -120,14 +120,6 @@ class MakeSeeder extends Command
             ->replace('\\', '/');
 
         return database_path("seeders/{$relativePath}.php");
-    }
-
-    protected function generateNamespaceFromPath(string $path): string
-    {
-        return collect(explode('/', $this->getRelativePath($path)))
-            ->map(Str::studly(...))
-            ->map(fn ($value) => Str::remove('.php', $value))
-            ->implode('\\');
     }
 
     protected function hasFactories(): bool
