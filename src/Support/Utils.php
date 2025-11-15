@@ -34,6 +34,8 @@ class Utils
 
             if (is_array($value)) {
                 $formattedValue = self::arrayToString($value, $indentLevel + 1);
+            } elseif (self::isRawCode($value)) {
+                $formattedValue = $value;
             } else {
                 $formattedValue = var_export($value, true);
             }
@@ -42,5 +44,18 @@ class Utils
         }
 
         return $output .= str_repeat('    ', $indentLevel).']';
+    }
+
+    protected static function isRawCode(mixed $value): bool
+    {
+        if (! is_string($value)) {
+            return false;
+        }
+
+        if (in_array($value, ['true', 'false', 'null'], true)) {
+            return true;
+        }
+
+        return str_starts_with($value, '$');
     }
 }

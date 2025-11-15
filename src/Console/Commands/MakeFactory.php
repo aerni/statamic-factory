@@ -2,22 +2,31 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
-use Aerni\Factory\Console\Commands\Concerns\SavesFile;
-use Aerni\Factory\Factories\DefinitionGenerator;
-use Aerni\Factory\Factories\Factory;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
+use Statamic\Facades\User;
 use Illuminate\Support\Str;
-use Statamic\Console\RunsInPlease;
-use Statamic\Events\EntryBlueprintFound;
-use Statamic\Events\TermBlueprintFound;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
-
-use function Laravel\Prompts\confirm;
+use Statamic\Fields\Blueprint;
+use Illuminate\Console\Command;
+use Statamic\Facades\Collection;
 use function Laravel\Prompts\info;
+use Statamic\Console\RunsInPlease;
+use Aerni\Factory\Factories\Factory;
 use function Laravel\Prompts\select;
+use Illuminate\Support\Facades\File;
+use Statamic\Support\FileCollection;
+use function Laravel\Prompts\confirm;
+use Statamic\Events\TermBlueprintFound;
+use Statamic\Events\UserBlueprintFound;
+use Statamic\Events\EntryBlueprintFound;
+use Statamic\Contracts\Auth\User as AuthUser;
+use Aerni\Factory\Console\Commands\Concerns\SavesFile;
+use Aerni\Factory\Factories\FactoryDefinitionGenerator;
+use Illuminate\Support\Collection as LaravelCollection;
+
+use Aerni\Factory\Factories\UserFactoryDefinitionGenerator;
+use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Statamic\Contracts\Entries\Collection as EntriesCollection;
+use Statamic\Contracts\Taxonomies\Taxonomy as TaxonomiesTaxonomy;
 
 class MakeFactory extends Command
 {
@@ -91,6 +100,7 @@ class MakeFactory extends Command
             options: [
                 'collections' => 'Collections',
                 'taxonomies' => 'Taxonomies',
+                'users' => 'Users',
             ],
             validate: fn (string $value) => match ($value) {
                 'collections' => Collection::all()->isEmpty()
@@ -99,36 +109,21 @@ class MakeFactory extends Command
                 'taxonomies' => Taxonomy::all()->isEmpty()
                     ? 'You need to create at least one taxonomy to create a factory.'
                     : null,
+                default => null,
             },
         );
 
-        $contentModels = match ($contentType) {
-            'collections' => Collection::all(),
-            'taxonomies' => Taxonomy::all(),
-        };
+        $contentModel = $this->selectContentModel($contentType);
 
-        $selectedContentModel = select(
-            label: 'For which '.Str::singular($contentType).' do you want to create a factory?',
-            options: $contentModels->mapWithKeys(fn ($contentModel) => [$contentModel->handle() => $contentModel->title()]),
-        );
-
-        $contentModel = $contentModels->firstWhere('handle', $selectedContentModel);
-
-        $blueprints = match ($contentType) {
-            'collections' => $contentModel->entryBlueprints(),
-            'taxonomies' => $contentModel->termBlueprints(),
-        };
-
-        $selectedBlueprint = select(
-            label: 'For which blueprint do you want to create a factory?',
-            options: $blueprints->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
-        );
-
-        $blueprint = $blueprints->firstWhere('handle', $selectedBlueprint);
+        $blueprint = $this->selectBlueprint($contentModel);
 
         $this->fireBlueprintEvent($blueprint);
 
-        $classNamespace = Factory::$namespace.collect([$contentType, $selectedContentModel])->map(Str::studly(...))->implode('\\');
+        $classNamespace = collect([$contentType])
+            ->when($contentType !== 'users', fn ($segments) => $segments->push($contentModel->handle()))
+            ->map(Str::studly(...))
+            ->prepend(Str::replaceLast('\\', '', Factory::$namespace))
+            ->implode('\\');
 
         $className = str($blueprint)->studly()->append('Factory');
 
@@ -142,14 +137,57 @@ class MakeFactory extends Command
         return [
             'classNamespace' => $classNamespace,
             'className' => $className,
-            'definition' => new DefinitionGenerator($blueprint),
+            'definition' => match ($contentType) {
+                'users' => new UserFactoryDefinitionGenerator($blueprint),
+                default => new FactoryDefinitionGenerator($blueprint),
+            },
             'path' => $this->generatePathFromNamespace("$classNamespace\\$className"),
             'createSeeder' => $createSeeder,
             'trait' => match ($contentType) {
                 'collections' => 'CreatesEntry',
                 'taxonomies' => 'CreatesTerm',
+                'users' => 'CreatesUser',
             },
         ];
+    }
+
+    protected function selectContentModel(string $contentType): mixed
+    {
+        if ($contentType === 'users') {
+            return User::make();
+        }
+
+        $contentModels = match ($contentType) {
+            'collections' => Collection::all(),
+            'taxonomies' => Taxonomy::all(),
+        };
+
+        $selectedContentModel = select(
+            label: 'For which '.Str::singular($contentType).' do you want to create a factory?',
+            options: $contentModels->mapWithKeys(fn ($model) => [$model->handle() => $model->title()]),
+        );
+
+        return $contentModels->firstWhere('handle', $selectedContentModel);
+    }
+
+    protected function selectBlueprint($contentModel): Blueprint
+    {
+        $blueprints = match (true) {
+            $contentModel instanceof EntriesCollection => $contentModel->entryBlueprints(),
+            $contentModel instanceof TaxonomiesTaxonomy => $contentModel->termBlueprints(),
+            $contentModel instanceof AuthUser => collect([$contentModel->blueprint()]),
+        };
+
+        if ($blueprints->count() === 1) {
+            return $blueprints->first();
+        }
+
+        $selectedBlueprint = select(
+            label: 'For which blueprint do you want to create a factory?',
+            options: $blueprints->mapWithKeys(fn ($blueprint) => [$blueprint->handle() => $blueprint->title()]),
+        );
+
+        return $blueprints->firstWhere('handle', $selectedBlueprint);
     }
 
     protected function fireBlueprintEvent($blueprint): void
@@ -157,6 +195,7 @@ class MakeFactory extends Command
         match (true) {
             Str::contains($blueprint->namespace(), 'collections') => EntryBlueprintFound::dispatch($blueprint),
             Str::contains($blueprint->namespace(), 'taxonomies') => TermBlueprintFound::dispatch($blueprint),
+            is_null($blueprint->namespace()) && $blueprint->handle() === 'user' => UserBlueprintFound::dispatch($blueprint),
             default => null,
         };
     }

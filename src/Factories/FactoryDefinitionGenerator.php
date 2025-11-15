@@ -9,18 +9,33 @@ use Statamic\Fields\Blueprint;
 use Statamic\Fields\Field;
 use Statamic\Fields\Fields;
 
-class DefinitionGenerator implements Arrayable
+class FactoryDefinitionGenerator implements Arrayable
 {
     public function __construct(protected Blueprint $blueprint) {}
 
     public function toArray(): array
     {
-        return $this->processFields($this->blueprint->fields()->all());
+        return $this->process();
     }
 
     public function __toString(): string
     {
-        return Utils::arrayToString($this->toArray());
+        return Utils::arrayToString($this->toArray(), 2);
+    }
+
+    protected function defaults(): array
+    {
+        return [];
+    }
+
+    protected function process(): array
+    {
+        return array_merge($this->processBlueprint(), $this->defaults());
+    }
+
+    protected function processBlueprint(): array
+    {
+        return $this->processFields($this->blueprint->fields()->all());
     }
 
     protected function processFields(Collection $fields): array
