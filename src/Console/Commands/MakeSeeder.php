@@ -42,7 +42,7 @@ class MakeSeeder extends Command
     public function handle()
     {
         if (! $this->hasFactories()) {
-            return info('There are no Statamic factories. To create a seeder, you need to create a factory first.');
+            $this->fail('No Statamic factories found. Run "php please make:factory" first.');
         }
 
         $seeder = $this->argument('factory')

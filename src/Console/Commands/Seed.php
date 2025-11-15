@@ -55,7 +55,7 @@ class Seed extends Command
         $seeders = $this->discoverSeeders();
 
         if ($seeders->isEmpty()) {
-            $this->fail('No Statamic seeders found in database/seeders/Statamic.');
+            $this->fail('No Statamic seeders found. Run "php please make:seeder" first.');
         }
 
         if ($this->option('all')) {
