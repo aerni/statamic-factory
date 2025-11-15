@@ -2,6 +2,7 @@
 
 namespace Aerni\Factory\Console\Commands;
 
+use Aerni\Factory\Console\Commands\Concerns\ReadsClassFromFile;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Support\Collection;
@@ -15,6 +16,7 @@ use function Laravel\Prompts\multiselect;
 class Seed extends Command
 {
     use ConfirmableTrait;
+    use ReadsClassFromFile;
     use RunsInPlease;
 
     /**
@@ -77,7 +79,7 @@ class Seed extends Command
 
         return collect(File::allFiles($seedersPath))
             ->filter(fn (SplFileInfo $file) => $file->getExtension() === 'php')
-            ->mapWithKeys(fn (SplFileInfo $file) => [$this->getSeederNamespace($file) => $this->getSeederDisplay($file)])
+            ->mapWithKeys(fn (SplFileInfo $file) => [$this->getClassName($file) => $this->getClassDisplay($file)])
             ->sort();
     }
 
@@ -91,19 +93,5 @@ class Seed extends Command
             'Running '.Str::afterLast($class, '\\'),
             fn () => $seeder->__invoke()
         );
-    }
-
-    protected function getSeederNamespace(SplFileInfo $file): string
-    {
-        return Str::of($file->getRelativePathname())
-            ->replace('/', '\\')
-            ->prepend('Database\\Seeders\\Statamic\\')
-            ->remove('.php');
-    }
-
-    protected function getSeederDisplay(SplFileInfo $file): string
-    {
-        return Str::of($file->getRelativePathname())
-            ->remove('.php');
     }
 }
