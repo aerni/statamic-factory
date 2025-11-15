@@ -2,31 +2,29 @@
 
 namespace Aerni\Factory\Console\Commands;
 
-use Statamic\Facades\User;
-use Illuminate\Support\Str;
-use Statamic\Facades\Taxonomy;
-use Statamic\Fields\Blueprint;
-use Illuminate\Console\Command;
-use Statamic\Facades\Collection;
-use function Laravel\Prompts\info;
-use Statamic\Console\RunsInPlease;
-use Aerni\Factory\Factories\Factory;
-use function Laravel\Prompts\select;
-use Illuminate\Support\Facades\File;
-use Statamic\Support\FileCollection;
-use function Laravel\Prompts\confirm;
-use Statamic\Events\TermBlueprintFound;
-use Statamic\Events\UserBlueprintFound;
-use Statamic\Events\EntryBlueprintFound;
-use Statamic\Contracts\Auth\User as AuthUser;
-use Aerni\Factory\Console\Commands\Concerns\SavesFile;
-use Aerni\Factory\Factories\FactoryDefinitionGenerator;
-use Illuminate\Support\Collection as LaravelCollection;
-
-use Aerni\Factory\Factories\UserFactoryDefinitionGenerator;
 use Aerni\Factory\Console\Commands\Concerns\GetsRelativePath;
+use Aerni\Factory\Console\Commands\Concerns\SavesFile;
+use Aerni\Factory\Factories\Factory;
+use Aerni\Factory\Factories\FactoryDefinitionGenerator;
+use Aerni\Factory\Factories\UserFactoryDefinitionGenerator;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use Statamic\Console\RunsInPlease;
+use Statamic\Contracts\Auth\User as AuthUser;
 use Statamic\Contracts\Entries\Collection as EntriesCollection;
 use Statamic\Contracts\Taxonomies\Taxonomy as TaxonomiesTaxonomy;
+use Statamic\Events\EntryBlueprintFound;
+use Statamic\Events\TermBlueprintFound;
+use Statamic\Events\UserBlueprintFound;
+use Statamic\Facades\Collection;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\User;
+use Statamic\Fields\Blueprint;
+
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\select;
 
 class MakeFactory extends Command
 {

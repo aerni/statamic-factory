@@ -2,7 +2,6 @@
 
 namespace Aerni\Factory\Factories\Concerns;
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -64,8 +63,9 @@ trait WithAssets
 
         $image = $this->image($width, $height);
 
-        if (!$image) {
+        if (! $image) {
             ray('no image');
+
             return '';
         }
 
