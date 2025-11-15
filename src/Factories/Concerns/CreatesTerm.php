@@ -55,7 +55,7 @@ trait CreatesTerm
             ?? str(get_class($this))
                 ->beforeLast('\\')
                 ->afterLast('\\')
-                ->lower();
+                ->snake();
     }
 
     protected function blueprintHandle(): string
@@ -64,7 +64,7 @@ trait CreatesTerm
             ?? str(get_class($this))
                 ->afterLast('\\')
                 ->remove('Factory')
-                ->lower();
+                ->snake();
     }
 
     protected function blueprint(): Blueprint
