@@ -8,5 +8,5 @@ This addon features the Statamic equivalent of [Laravel model factories](https:/
 Install the addon using Composer:
 
 ```bash
-composer require aerni/factory
+composer require aerni/factory --dev
 ```
