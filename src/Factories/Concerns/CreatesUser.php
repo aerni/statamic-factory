@@ -30,6 +30,18 @@ trait CreatesUser
             $user->preferences($preferences);
         }
 
-        return $user->data($attributes);
+        if ($roles = Arr::pull($attributes, 'roles')) {
+            foreach ($roles as $role) {
+                $user->assignRole($role);
+            }
+        }
+
+        if ($groups = Arr::pull($attributes, 'groups')) {
+            foreach ($groups as $group) {
+                $user->addToGroup($group);
+            }
+        }
+
+        return $user->merge($attributes);
     }
 }
