@@ -310,7 +310,7 @@ abstract class Factory
             ? Site::get($this->getSitesFromContentModel()->first())
             : Site::default();
 
-        return Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
+        return \Faker\Factory::create($site->locale());
     }
 
     public function modelName(): string

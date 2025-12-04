@@ -61,7 +61,7 @@ trait WithSites
             ? Site::get($siteState['site'])
             : Site::get($this->getSitesFromContentModel()->first());
 
-        $this->faker = Container::getInstance()->makeWith(Generator::class, ['locale' => $site->locale()]);
+        $this->faker = \Faker\Factory::create($site->locale());
 
         $siteState = ! isset($siteState['isRandomSite'])
             ? $states->get($siteState['index'])
