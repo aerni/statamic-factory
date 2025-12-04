@@ -4,7 +4,6 @@ namespace Aerni\Factory\Factories;
 
 use Closure;
 use Faker\Generator;
-use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\CrossJoinSequence;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\Collection;
